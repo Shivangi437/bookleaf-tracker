@@ -723,7 +723,7 @@ function renderTable() {
         tBadge = '<span class="muted">No tickets</span>';
       }
 
-      // Action: Reply link on Freshdesk, or "Create Ticket" prompt
+      // Action: Reply link on Freshdesk (only show tickets raised by assigned authors, no "New Ticket")
       let actionBtn;
       if (latestTicket && hasOpenTicket) {
         const openTicket = authorTickets.find(t => t.statusCode === 2 || t.statusCode === 3);
@@ -731,7 +731,7 @@ function renderTable() {
       } else if (latestTicket) {
         actionBtn = `<a href="https://${FD_DOMAIN}/a/tickets/${latestTicket.id}" target="_blank" class="btn btn-sm btn-secondary">View Ticket</a>`;
       } else {
-        actionBtn = `<a href="https://${FD_DOMAIN}/a/tickets/new?email=${encodeURIComponent(a.email)}" target="_blank" class="btn btn-sm btn-accent">New Ticket</a>`;
+        actionBtn = '<span class="muted">No tickets</span>';
       }
 
       // Status badge (read-only in team view)
@@ -988,3 +988,414 @@ function loadPreBuiltAuthors() {
   console.log(`Auto-loaded ${state.authors.length} authors`);
   refreshUI();
 }
+
+// ── Razorpay Webhook ──────────────────────────────────────────────────────
+state.webhookLog = [];
+
+const webhookDom = {
+  secret: $id('rp-webhook-secret'),
+  payload: $id('webhook-payload'),
+  btnProcess: $id('btn-webhook-process'),
+  btnSimulate: $id('btn-webhook-simulate'),
+  btnClear: $id('btn-webhook-clear'),
+  status: $id('webhook-status'),
+  logBody: $id('webhook-log-body'),
+};
+
+function showWebhookStatus(m, t) {
+  webhookDom.status.textContent = m;
+  webhookDom.status.className = `status-msg status-${t}`;
+  webhookDom.status.classList.remove('hidden');
+  clearTimeout(showWebhookStatus._t);
+  showWebhookStatus._t = setTimeout(() => webhookDom.status.classList.add('hidden'), 8000);
+}
+
+function processWebhookPayload() {
+  const raw = webhookDom.payload.value.trim();
+  if (!raw) { showWebhookStatus('Paste a webhook JSON payload.', 'error'); return; }
+
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { showWebhookStatus(`Invalid JSON: ${e.message}`, 'error'); return; }
+
+  const event = data.event;
+  if (event !== 'payment.captured') {
+    showWebhookStatus(`Ignored event: ${event}. Only payment.captured is processed.`, 'info');
+    state.webhookLog.unshift({ time: new Date().toLocaleTimeString(), event, author: '–', email: '–', pkg: '–', amount: '–', status: 'Ignored' });
+    renderWebhookLog();
+    return;
+  }
+
+  const payment = data.payload && data.payload.payment && data.payload.payment.entity;
+  if (!payment) { showWebhookStatus('Malformed payload: missing payment entity.', 'error'); return; }
+
+  const email = (payment.email || '').toLowerCase().trim();
+  if (!email) { showWebhookStatus('Payment has no email.', 'error'); return; }
+
+  const amountPaise = payment.amount;
+  const amountRupees = amountPaise / 100;
+  const pkg = PACKAGES[amountRupees];
+
+  if (!pkg) {
+    showWebhookStatus(`Unknown package amount: ₹${amountRupees}. Skipped.`, 'info');
+    state.webhookLog.unshift({ time: new Date().toLocaleTimeString(), event, author: '–', email, pkg: `₹${amountRupees}`, amount: `₹${amountRupees}`, status: 'Unknown Pkg' });
+    renderWebhookLog();
+    return;
+  }
+
+  // Check duplicate
+  const existing = state.authors.find(a => a.email.toLowerCase() === email);
+  if (existing) {
+    showWebhookStatus(`Duplicate: ${email} already exists (assigned to ${existing.consultant}).`, 'info');
+    state.webhookLog.unshift({ time: new Date().toLocaleTimeString(), event, author: existing.name, email, pkg: pkg.label, amount: `₹${amountRupees}`, status: 'Duplicate' });
+    renderWebhookLog();
+    return;
+  }
+
+  // Extract name
+  let name = '';
+  try {
+    if (payment.notes && typeof payment.notes === 'object') {
+      name = payment.notes.name || payment.notes.registered_name || '';
+    }
+  } catch {}
+  if (!name && payment.card && payment.card.name) name = payment.card.name;
+  if (!name) name = email.split('@')[0];
+
+  // Round-robin assign
+  const c = ACTIVE_CONSULTANTS[state.rrIndex % ACTIVE_CONSULTANTS.length];
+  state.rrIndex++;
+
+  const newAuthor = {
+    id: payment.id || `wh-${Date.now()}`,
+    name: name.trim(), email: (payment.email || '').trim(),
+    phone: (payment.contact || '').trim(),
+    package: pkg.label, packageKey: pkg.key,
+    paymentDate: payment.created_at ? new Date(payment.created_at * 1000).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'),
+    consultant: c.name, status: 'assigned', remarks: 'Via webhook',
+    introEmail: false, authorResponse: false, followUp: false, markedYes: false,
+    filesGenerated: false, addressMarketing: false, primePlacement: false, confirmationEmail: false,
+  };
+
+  state.authors.push(newAuthor);
+  showWebhookStatus(`Author added: ${newAuthor.name} (${email}) → ${c.name}`, 'success');
+  state.webhookLog.unshift({ time: new Date().toLocaleTimeString(), event, author: newAuthor.name, email, pkg: pkg.label, amount: `₹${amountRupees}`, status: 'Added' });
+  renderWebhookLog();
+  refreshUI();
+}
+
+function simulateWebhookEvent() {
+  const samplePayload = {
+    event: 'payment.captured',
+    payload: {
+      payment: {
+        entity: {
+          id: `pay_sim_${Date.now()}`,
+          amount: 1199900,
+          currency: 'INR',
+          status: 'captured',
+          email: `author_${Math.floor(Math.random()*9999)}@example.com`,
+          contact: `+9199${Math.floor(10000000 + Math.random()*89999999)}`,
+          notes: { name: `Test Author ${Math.floor(Math.random()*999)}` },
+          created_at: Math.floor(Date.now()/1000),
+        }
+      }
+    }
+  };
+  webhookDom.payload.value = JSON.stringify(samplePayload, null, 2);
+  webhookDom.btnProcess.disabled = false;
+  showWebhookStatus('Sample webhook payload generated. Click "Process" to add the author.', 'info');
+}
+
+function renderWebhookLog() {
+  if (state.webhookLog.length === 0) {
+    webhookDom.logBody.innerHTML = '<tr class="empty-row"><td colspan="7">No webhook events received yet.</td></tr>';
+    return;
+  }
+  webhookDom.logBody.innerHTML = state.webhookLog.map(e => {
+    const sc = e.status === 'Added' ? 'webhook-ok' : e.status === 'Duplicate' ? 'webhook-dup' : 'webhook-err';
+    return `<tr>
+      <td class="muted">${e.time}</td>
+      <td>${esc(e.event)}</td>
+      <td class="td-name">${esc(e.author)}</td>
+      <td class="td-email">${esc(e.email)}</td>
+      <td>${esc(e.pkg)}</td>
+      <td>${esc(e.amount)}</td>
+      <td class="${sc}">${e.status}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Webhook events
+webhookDom.payload.addEventListener('input', () => {
+  webhookDom.btnProcess.disabled = !webhookDom.payload.value.trim();
+});
+webhookDom.btnProcess.addEventListener('click', processWebhookPayload);
+webhookDom.btnSimulate.addEventListener('click', simulateWebhookEvent);
+webhookDom.btnClear.addEventListener('click', () => {
+  state.webhookLog = [];
+  renderWebhookLog();
+  webhookDom.payload.value = '';
+  webhookDom.btnProcess.disabled = true;
+  showWebhookStatus('Log cleared.', 'info');
+});
+
+// ── Callback Form & Tracker ──────────────────────────────────────────────
+state.callbacks = [];
+let cbIdCounter = 1;
+
+const cbDom = {
+  authorName: $id('cb-author-name'),
+  authorEmail: $id('cb-author-email'),
+  phone: $id('cb-phone'),
+  consultant: $id('cb-consultant'),
+  reason: $id('cb-reason'),
+  priority: $id('cb-priority'),
+  date: $id('cb-date'),
+  time: $id('cb-time'),
+  notes: $id('cb-notes'),
+  btnSubmit: $id('btn-cb-submit'),
+  btnClear: $id('btn-cb-clear'),
+  formStatus: $id('cb-form-status'),
+  search: $id('cb-search'),
+  filterStatus: $id('cb-filter-status'),
+  filterConsultant: $id('cb-filter-consultant'),
+  filterPriority: $id('cb-filter-priority'),
+  btnExport: $id('btn-cb-export'),
+  trackerBody: $id('cb-tracker-body'),
+  statTotal: $id('cb-stat-total'),
+  statPending: $id('cb-stat-pending'),
+  statScheduled: $id('cb-stat-scheduled'),
+  statCompleted: $id('cb-stat-completed'),
+  statOverdue: $id('cb-stat-overdue'),
+  statCancelled: $id('cb-stat-cancelled'),
+  consultantBreakdown: $id('cb-consultant-breakdown'),
+  authorList: $id('cb-author-list'),
+};
+
+function showCbStatus(m, t) {
+  cbDom.formStatus.textContent = m;
+  cbDom.formStatus.className = `status-msg status-${t}`;
+  cbDom.formStatus.classList.remove('hidden');
+  clearTimeout(showCbStatus._t);
+  showCbStatus._t = setTimeout(() => cbDom.formStatus.classList.add('hidden'), 6000);
+}
+
+// Auto-complete: populate datalist with author names
+function populateAuthorDatalist() {
+  if (!cbDom.authorList) return;
+  cbDom.authorList.innerHTML = state.authors.map(a =>
+    `<option value="${esc(a.name)}" data-email="${esc(a.email)}">`
+  ).join('');
+}
+
+// When author name is typed/selected, auto-fill email, phone, consultant
+cbDom.authorName.addEventListener('input', () => {
+  const name = cbDom.authorName.value.trim();
+  const author = state.authors.find(a => a.name.toLowerCase() === name.toLowerCase());
+  if (author) {
+    cbDom.authorEmail.value = author.email;
+    cbDom.phone.value = author.phone || '';
+    cbDom.consultant.value = author.consultant || '';
+  } else {
+    cbDom.authorEmail.value = '';
+    cbDom.phone.value = '';
+    cbDom.consultant.value = '';
+  }
+  checkCbReady();
+});
+
+function checkCbReady() {
+  const nameOk = cbDom.authorName.value.trim();
+  const reasonOk = cbDom.reason.value;
+  cbDom.btnSubmit.disabled = !(nameOk && reasonOk);
+}
+cbDom.reason.addEventListener('change', checkCbReady);
+
+function submitCallback() {
+  const name = cbDom.authorName.value.trim();
+  const author = state.authors.find(a => a.name.toLowerCase() === name.toLowerCase());
+  if (!name) { showCbStatus('Enter author name.', 'error'); return; }
+  if (!cbDom.reason.value) { showCbStatus('Select a reason.', 'error'); return; }
+
+  const scheduledDate = cbDom.date.value;
+  const scheduledTime = cbDom.time.value;
+  let cbStatus = 'pending';
+  if (scheduledDate) cbStatus = 'scheduled';
+
+  const cb = {
+    id: cbIdCounter++,
+    authorName: name,
+    authorEmail: author ? author.email : cbDom.authorEmail.value,
+    phone: author ? (author.phone || '') : cbDom.phone.value,
+    consultant: author ? (author.consultant || '') : cbDom.consultant.value,
+    reason: cbDom.reason.value,
+    reasonLabel: cbDom.reason.options[cbDom.reason.selectedIndex].text,
+    priority: cbDom.priority.value,
+    scheduledDate: scheduledDate || null,
+    scheduledTime: scheduledTime || null,
+    notes: cbDom.notes.value.trim(),
+    status: cbStatus,
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+  };
+
+  state.callbacks.unshift(cb);
+  showCbStatus(`Callback #${cb.id} created for ${name} → ${cb.consultant || 'Unassigned'}`, 'success');
+  clearCallbackForm();
+  renderCallbackTracker();
+}
+
+function clearCallbackForm() {
+  cbDom.authorName.value = '';
+  cbDom.authorEmail.value = '';
+  cbDom.phone.value = '';
+  cbDom.consultant.value = '';
+  cbDom.reason.value = '';
+  cbDom.priority.value = 'normal';
+  cbDom.date.value = '';
+  cbDom.time.value = '';
+  cbDom.notes.value = '';
+  cbDom.btnSubmit.disabled = true;
+}
+
+function updateCallbackStatus(id, newStatus) {
+  const cb = state.callbacks.find(c => c.id === id);
+  if (!cb) return;
+  cb.status = newStatus;
+  if (newStatus === 'completed') cb.completedAt = new Date().toISOString();
+  renderCallbackTracker();
+}
+
+function renderCallbackTracker() {
+  // Stats
+  const total = state.callbacks.length;
+  const now = new Date();
+  // Mark overdue: scheduled in the past but not completed/cancelled
+  state.callbacks.forEach(cb => {
+    if (cb.status === 'scheduled' && cb.scheduledDate) {
+      const schedDate = new Date(cb.scheduledDate + (cb.scheduledTime ? 'T' + cb.scheduledTime : 'T23:59:59'));
+      if (schedDate < now) cb.status = 'overdue';
+    }
+  });
+
+  const pending = state.callbacks.filter(c => c.status === 'pending').length;
+  const scheduled = state.callbacks.filter(c => c.status === 'scheduled').length;
+  const completed = state.callbacks.filter(c => c.status === 'completed').length;
+  const overdue = state.callbacks.filter(c => c.status === 'overdue').length;
+  const cancelled = state.callbacks.filter(c => c.status === 'cancelled').length;
+
+  cbDom.statTotal.textContent = total;
+  cbDom.statPending.textContent = pending;
+  cbDom.statScheduled.textContent = scheduled;
+  cbDom.statCompleted.textContent = completed;
+  cbDom.statOverdue.textContent = overdue;
+  cbDom.statCancelled.textContent = cancelled;
+
+  // Consultant breakdown
+  const byConsultant = {};
+  state.callbacks.forEach(cb => {
+    const c = cb.consultant || 'Unassigned';
+    if (!byConsultant[c]) byConsultant[c] = { total: 0, pending: 0, completed: 0 };
+    byConsultant[c].total++;
+    if (cb.status === 'pending' || cb.status === 'scheduled' || cb.status === 'overdue') byConsultant[c].pending++;
+    if (cb.status === 'completed') byConsultant[c].completed++;
+  });
+  cbDom.consultantBreakdown.innerHTML = Object.entries(byConsultant).map(([name, data]) =>
+    `<div class="workload-card">
+      <div class="wl-header"><h3>${esc(name)}</h3></div>
+      <div class="workload-stats">
+        <span class="wl-total">${data.total} Total</span>
+        <span class="wl-progress">${data.pending} Active</span>
+        <span class="wl-done">${data.completed} Done</span>
+      </div>
+      <div class="workload-bar"><div class="bar-fill" style="width:${total ? (data.total/total*100) : 0}%"></div></div>
+    </div>`
+  ).join('') || '<p class="muted">No callbacks yet.</p>';
+
+  // Filter
+  const search = (cbDom.search.value || '').toLowerCase();
+  const sf = cbDom.filterStatus.value;
+  const cf = cbDom.filterConsultant.value;
+  const pf = cbDom.filterPriority.value;
+
+  let rows = state.callbacks;
+  if (search) rows = rows.filter(c => c.authorName.toLowerCase().includes(search) || c.authorEmail.toLowerCase().includes(search) || c.consultant.toLowerCase().includes(search));
+  if (sf !== 'all') rows = rows.filter(c => c.status === sf);
+  if (cf !== 'all') rows = rows.filter(c => c.consultant === cf);
+  if (pf !== 'all') rows = rows.filter(c => c.priority === pf);
+
+  if (rows.length === 0) {
+    cbDom.trackerBody.innerHTML = '<tr class="empty-row"><td colspan="10">No callback requests match filters.</td></tr>';
+    return;
+  }
+
+  cbDom.trackerBody.innerHTML = rows.map((cb, idx) => {
+    const priClass = `priority-${cb.priority}`;
+    const stClass = `cb-status-${cb.status}`;
+    const scheduled = cb.scheduledDate ? `${cb.scheduledDate}${cb.scheduledTime ? ' ' + cb.scheduledTime : ''}` : '–';
+
+    let actions = '';
+    if (cb.status === 'pending') {
+      actions = `<div class="cb-action-row">
+        <button class="btn btn-sm btn-primary" onclick="updateCallbackStatus(${cb.id},'scheduled')">Schedule</button>
+        <button class="btn btn-sm btn-danger" onclick="updateCallbackStatus(${cb.id},'cancelled')">Cancel</button>
+      </div>`;
+    } else if (cb.status === 'scheduled' || cb.status === 'overdue') {
+      actions = `<div class="cb-action-row">
+        <button class="btn btn-sm btn-accent" onclick="updateCallbackStatus(${cb.id},'completed')">Done</button>
+        <button class="btn btn-sm btn-danger" onclick="updateCallbackStatus(${cb.id},'cancelled')">Cancel</button>
+      </div>`;
+    } else {
+      actions = `<span class="muted">${cb.status === 'completed' ? 'Completed' : 'Cancelled'}</span>`;
+    }
+
+    return `<tr>
+      <td class="muted">${cb.id}</td>
+      <td class="td-name">${esc(cb.authorName)}</td>
+      <td class="muted">${esc(cb.phone || '–')}</td>
+      <td>${esc(cb.consultant || '–')}</td>
+      <td>${esc(cb.reasonLabel)}</td>
+      <td><span class="badge ${priClass}">${cb.priority.charAt(0).toUpperCase() + cb.priority.slice(1)}</span></td>
+      <td class="muted">${scheduled}</td>
+      <td><span class="badge ${stClass}">${cb.status.charAt(0).toUpperCase() + cb.status.slice(1)}</span></td>
+      <td class="td-subject">${esc(cb.notes || '–')}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportCallbacks() {
+  if (state.callbacks.length === 0) return;
+  const rows = [['#','Author','Email','Phone','Consultant','Reason','Priority','Scheduled Date','Scheduled Time','Status','Notes','Created']];
+  state.callbacks.forEach(cb => {
+    rows.push([cb.id, cb.authorName, cb.authorEmail, cb.phone, cb.consultant, cb.reasonLabel, cb.priority, cb.scheduledDate||'', cb.scheduledTime||'', cb.status, cb.notes, cb.createdAt]);
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a'); link.href = url; link.download = `callbacks_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+  URL.revokeObjectURL(url);
+}
+
+// Callback events
+cbDom.btnSubmit.addEventListener('click', submitCallback);
+cbDom.btnClear.addEventListener('click', clearCallbackForm);
+cbDom.search.addEventListener('input', renderCallbackTracker);
+cbDom.filterStatus.addEventListener('change', renderCallbackTracker);
+cbDom.filterConsultant.addEventListener('change', renderCallbackTracker);
+cbDom.filterPriority.addEventListener('change', renderCallbackTracker);
+cbDom.btnExport.addEventListener('click', exportCallbacks);
+
+// Set default callback date to today
+cbDom.date.value = new Date().toISOString().split('T')[0];
+
+// Populate author datalist on initial load and after data changes
+const _origRefreshUI = refreshUI;
+refreshUI = function() {
+  _origRefreshUI();
+  populateAuthorDatalist();
+};
+
+// Initial render
+populateAuthorDatalist();
+renderCallbackTracker();
