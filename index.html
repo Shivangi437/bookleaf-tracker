@@ -12,7 +12,7 @@
     <div class="header-row">
       <div class="header-left">
         <h1>Bookleaf – Author–Consultant Tracker</h1>
-        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration</p>
+        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration &middot; Razorpay Webhook &middot; Callback Tracker</p>
       </div>
       <div class="header-right">
         <div class="identity-selector">
@@ -204,6 +204,195 @@
             <div class="fd-info">
               <p class="info-text">Tickets auto-match to authors by email. Resolved tickets auto-mark authors as "Good to Go".</p>
             </div>
+          </div>
+        </section>
+      </div>
+    </details>
+
+    <!-- Razorpay Webhook Section -->
+    <details class="admin-section">
+      <summary class="admin-toggle">Razorpay Webhook</summary>
+      <div class="webhook-content">
+        <section class="card">
+          <h2>Razorpay Webhook Listener</h2>
+          <div class="config-form">
+            <div class="field">
+              <label>Webhook Secret</label>
+              <input type="password" id="rp-webhook-secret" placeholder="Paste your Razorpay webhook secret here">
+            </div>
+            <div class="webhook-info-box">
+              <p class="info-text"><strong>Setup:</strong> In your Razorpay Dashboard &rarr; Settings &rarr; Webhooks, add a new webhook pointing to your server endpoint. Select <code>payment.captured</code> event.</p>
+              <p class="info-text" style="margin-top:4px">Webhook events are processed below. New authors from captured payments are auto-assigned via round-robin.</p>
+            </div>
+            <div class="btn-row">
+              <button id="btn-webhook-simulate" class="btn btn-secondary">Simulate Webhook Event</button>
+              <button id="btn-webhook-clear" class="btn btn-danger btn-sm">Clear Log</button>
+            </div>
+            <div id="webhook-status" class="status-msg hidden"></div>
+            <div class="field" style="margin-top:8px">
+              <label>Paste Webhook Payload (JSON)</label>
+              <textarea id="webhook-payload" class="webhook-textarea" rows="5" placeholder='{"event":"payment.captured","payload":{"payment":{"entity":{...}}}}'></textarea>
+            </div>
+            <div class="btn-row">
+              <button id="btn-webhook-process" class="btn btn-primary" disabled>Process Webhook Payload</button>
+            </div>
+          </div>
+          <div class="webhook-log-section" style="margin-top:16px">
+            <h3 style="font-size:0.9rem;margin-bottom:8px">Webhook Event Log</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Author</th>
+                    <th>Email</th>
+                    <th>Package</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="webhook-log-body">
+                  <tr class="empty-row"><td colspan="7">No webhook events received yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </details>
+
+    <!-- Callback Form & Tracker -->
+    <details class="admin-section" id="callback-section">
+      <summary class="admin-toggle">Callback Requests</summary>
+      <div class="callback-content">
+        <div class="config-row">
+          <!-- Callback Form -->
+          <section class="card">
+            <h2>Request Callback</h2>
+            <div class="config-form" id="callback-form">
+              <div class="field">
+                <label>Author Name</label>
+                <input type="text" id="cb-author-name" placeholder="Enter author name" list="cb-author-list">
+                <datalist id="cb-author-list"></datalist>
+              </div>
+              <div class="field">
+                <label>Author Email</label>
+                <input type="text" id="cb-author-email" placeholder="author@example.com" readonly class="readonly-input">
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="text" id="cb-phone" placeholder="+91XXXXXXXXXX" readonly class="readonly-input">
+              </div>
+              <div class="field">
+                <label>Assigned Consultant</label>
+                <input type="text" id="cb-consultant" readonly class="readonly-input">
+              </div>
+              <div class="field">
+                <label>Callback Reason</label>
+                <select id="cb-reason" class="filter-select">
+                  <option value="">Select reason...</option>
+                  <option value="manuscript-query">Manuscript Query</option>
+                  <option value="payment-issue">Payment Issue</option>
+                  <option value="publishing-status">Publishing Status Update</option>
+                  <option value="marketing-query">Marketing Query</option>
+                  <option value="general-inquiry">General Inquiry</option>
+                  <option value="complaint">Complaint</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Priority</label>
+                <select id="cb-priority" class="filter-select">
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Preferred Time</label>
+                <div class="date-range-row">
+                  <input type="date" id="cb-date" class="date-input">
+                  <input type="time" id="cb-time" class="date-input">
+                </div>
+              </div>
+              <div class="field">
+                <label>Notes</label>
+                <textarea id="cb-notes" class="webhook-textarea" rows="3" placeholder="Additional notes about the callback request..."></textarea>
+              </div>
+              <div class="btn-row">
+                <button id="btn-cb-submit" class="btn btn-primary" disabled>Submit Callback Request</button>
+                <button id="btn-cb-clear" class="btn btn-secondary">Clear Form</button>
+              </div>
+              <div id="cb-form-status" class="status-msg hidden"></div>
+            </div>
+          </section>
+
+          <!-- Callback Stats -->
+          <section class="card">
+            <h2>Callback Summary</h2>
+            <div class="callback-stats-grid" id="callback-stats">
+              <div class="summary-card summary-total"><span class="summary-num" id="cb-stat-total">0</span><span class="summary-label">Total Requests</span></div>
+              <div class="summary-card summary-pending"><span class="summary-num" id="cb-stat-pending">0</span><span class="summary-label">Pending</span></div>
+              <div class="summary-card summary-inprog"><span class="summary-num" id="cb-stat-scheduled">0</span><span class="summary-label">Scheduled</span></div>
+              <div class="summary-card summary-done"><span class="summary-num" id="cb-stat-completed">0</span><span class="summary-label">Completed</span></div>
+              <div class="summary-card summary-tickets"><span class="summary-num" id="cb-stat-overdue">0</span><span class="summary-label">Overdue</span></div>
+              <div class="summary-card" style="border-left:4px solid var(--warning)"><span class="summary-num" id="cb-stat-cancelled">0</span><span class="summary-label">Cancelled</span></div>
+            </div>
+            <h3 style="font-size:0.9rem;margin:16px 0 8px">By Consultant</h3>
+            <div id="cb-consultant-breakdown" class="workload-grid"></div>
+          </section>
+        </div>
+
+        <!-- Callback Tracker Table -->
+        <section class="card" style="margin-top:0">
+          <h2>Callback Tracker</h2>
+          <div class="table-controls">
+            <input type="text" id="cb-search" placeholder="Search callbacks..." class="search-input">
+            <select id="cb-filter-status" class="filter-select">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select id="cb-filter-consultant" class="filter-select">
+              <option value="all">All Consultants</option>
+              <option value="Vandana">Vandana</option>
+              <option value="Sapna">Sapna</option>
+              <option value="Tannu">Tannu</option>
+              <option value="Roosha">Roosha</option>
+              <option value="Firdaus">Firdaus</option>
+            </select>
+            <select id="cb-filter-priority" class="filter-select">
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="normal">Normal</option>
+            </select>
+            <button id="btn-cb-export" class="btn btn-secondary btn-sm">Export Callbacks</button>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Author</th>
+                  <th>Phone</th>
+                  <th>Consultant</th>
+                  <th>Reason</th>
+                  <th>Priority</th>
+                  <th>Scheduled</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cb-tracker-body">
+                <tr class="empty-row"><td colspan="10">No callback requests yet.</td></tr>
+              </tbody>
+            </table>
           </div>
         </section>
       </div>

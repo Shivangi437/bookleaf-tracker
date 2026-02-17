@@ -533,6 +533,72 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.7rem; text-transfo
   gap: 10px;
 }
 
+/* ── Webhook Panel ────────────────────────────────────────────────────────── */
+.webhook-content {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 16px;
+}
+.webhook-content .card { margin-bottom: 0; }
+.webhook-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  resize: vertical;
+  background: #fafbfc;
+}
+.webhook-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+.webhook-info-box {
+  background: #f0f4ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.webhook-log-section { border-top: 1px solid var(--border); padding-top: 12px; }
+
+/* ── Callback Section ─────────────────────────────────────────────────────── */
+.callback-content {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 16px;
+}
+.callback-content .card { margin-bottom: 0; }
+.callback-content .config-row { margin-bottom: 16px; }
+.callback-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.callback-stats-grid .summary-card { min-width: auto; padding: 12px 10px; }
+.callback-stats-grid .summary-num { font-size: 1.5rem; }
+
+/* Priority badges */
+.priority-urgent { background: #fee2e2; color: var(--danger); font-weight: 700; }
+.priority-high { background: #fff7ed; color: var(--fd); font-weight: 600; }
+.priority-normal { background: #e5e7eb; color: var(--text-muted); }
+
+/* Callback status badges */
+.cb-status-pending { background: #fef3c7; color: #92400e; }
+.cb-status-scheduled { background: #e0f2fe; color: #0369a1; }
+.cb-status-completed { background: #dcfce7; color: var(--success); }
+.cb-status-overdue { background: #fee2e2; color: var(--danger); }
+.cb-status-cancelled { background: #e5e7eb; color: var(--text-muted); }
+
+/* Callback action buttons */
+.cb-action-row { display: flex; gap: 4px; }
+.cb-action-row .btn { padding: 3px 8px; font-size: 0.7rem; }
+
+/* Webhook event status */
+.webhook-ok { color: var(--success); font-weight: 600; }
+.webhook-dup { color: var(--warning); font-weight: 600; }
+.webhook-err { color: var(--danger); font-weight: 600; }
+
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 footer {
   text-align: center;
@@ -550,4 +616,5 @@ footer {
   .workload-grid { grid-template-columns: 1fr; }
   .header-row { flex-direction: column; align-items: flex-start; }
   .identity-selector { width: 100%; }
+  .callback-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
