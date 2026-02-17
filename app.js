@@ -1,4 +1,4 @@
-// ── Config ────────────────────────────────────────────────────────────────────
+// ââ Config ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const CONSULTANTS = [
   { id: 'c-1', name: 'Vandana', fullName: 'Vandana Pradhan', email: 'vandana@bookleafpub.in', freshdeskAgentId: null, active: true },
   { id: 'c-2', name: 'Sapna',   fullName: 'Sapna Kumari',    email: 'sapna@bookleafpub.in',   freshdeskAgentId: null, active: true },
@@ -32,20 +32,20 @@ const STAGES = [
 // Admin password (change this to your preferred password)
 const ADMIN_PASSWORD = 'bookleaf2025';
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const state = {
   authors: [],
   rawCSV: null,
   rrIndex: 0,
   tickets: [],
   fdAgentsLoaded: false,
-  existingMap: {},       // email → { consultant, stages, remarks } from imported tracker CSVs
+  existingMap: {},       // email â { consultant, stages, remarks } from imported tracker CSVs
   loadedTrackers: [],    // which consultant trackers have been loaded
   currentView: 'admin',  // 'admin' or consultant name
   adminUnlocked: true,   // starts as admin; lock when switching away
 };
 
-// ── DOM refs ─────────────────────────────────────────────────────────────────
+// ââ DOM refs âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const $id = (id) => document.getElementById(id);
 const dom = {
   csvFile: $id('csv-file'), dropZone: $id('drop-zone'),
@@ -77,7 +77,7 @@ const dom = {
   identitySelect: $id('identity-select'), identityBadge: $id('identity-badge'),
 };
 
-// ── Freshdesk API ────────────────────────────────────────────────────────────
+// ââ Freshdesk API ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function fdHeaders() {
   const key = dom.fdApiKey.value.trim();
   return { 'Authorization': 'Basic ' + btoa(key + ':X'), 'Content-Type': 'application/json' };
@@ -85,18 +85,27 @@ function fdHeaders() {
 function fdUrl(path) { return `/fd-api/${path}`; }
 
 async function loadFreshdeskAgents() {
-  const res = await fetch(fdUrl('agents?per_page=100'), { headers: fdHeaders() });
-  if (!res.ok) throw new Error(`Freshdesk agents API: ${res.status}`);
-  const agents = await res.json();
-  CONSULTANTS.forEach(c => {
-    if (!c.email) return;
-    const match = agents.find(a => a.contact && a.contact.email && a.contact.email.toLowerCase() === c.email.toLowerCase());
-    if (match) c.freshdeskAgentId = match.id;
-  });
-  state.fdAgentsLoaded = true;
-  return CONSULTANTS.filter(c => c.freshdeskAgentId).map(c => c.name).join(', ');
+  try {
+    const res = await fetch(fdUrl('agents?per_page=100'), { headers: fdHeaders() });
+    if (!res.ok) {
+      console.warn(`Freshdesk agents API: ${res.status} — skipping agent matching`);
+      state.fdAgentsLoaded = true;
+      return '(agents API unavailable — ticket sync will still work)';
+    }
+    const agents = await res.json();
+    CONSULTANTS.forEach(c => {
+      if (!c.email) return;
+      const match = agents.find(a => a.contact && a.contact.email && a.contact.email.toLowerCase() === c.email.toLowerCase());
+      if (match) c.freshdeskAgentId = match.id;
+    });
+    state.fdAgentsLoaded = true;
+    return CONSULTANTS.filter(c => c.freshdeskAgentId).map(c => c.name).join(', ') || '(no agents matched)';
+  } catch (err) {
+    console.warn('Freshdesk agents error:', err.message);
+    state.fdAgentsLoaded = true;
+    return '(agents API unavailable)';
+  }
 }
-
 async function fetchFreshdeskTickets() {
   const key = dom.fdApiKey.value.trim();
   if (!key) { showFdStatus('Enter Freshdesk API key.', 'error'); return; }
@@ -127,7 +136,7 @@ async function fetchFreshdeskTickets() {
       };
     });
 
-    // Auto-mark: if Freshdesk ticket is Resolved/Closed → mark author as "good-to-go"
+    // Auto-mark: if Freshdesk ticket is Resolved/Closed â mark author as "good-to-go"
     state.tickets.forEach(t => {
       if (t.isMatched && (t.statusCode === 4 || t.statusCode === 5)) {
         const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
@@ -177,12 +186,12 @@ async function assignSingleTicket(ticketId) {
   if (!c || !c.freshdeskAgentId) { showFdStatus(`${ticket.matchedConsultant} not linked.`, 'error'); return; }
   try {
     const res = await fetch(fdUrl(`tickets/${ticketId}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
-    if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} → ${c.name}`, 'success'); refreshUI(); }
+    if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} â ${c.name}`, 'success'); refreshUI(); }
     else showFdStatus(`Failed #${ticketId}`, 'error');
   } catch (err) { showFdStatus(`Error: ${err.message}`, 'error'); }
 }
 
-// ── Razorpay API ─────────────────────────────────────────────────────────────
+// ââ Razorpay API âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function rpHeaders() {
   const keyId = dom.rpKeyId.value.trim();
   const keySecret = dom.rpKeySecret.value.trim();
@@ -228,7 +237,7 @@ async function fetchRazorpayPayments() {
       const res = await fetch(url, { headers: rpHeaders() });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(`Razorpay API: ${res.status} — ${err.detail || err.error || 'Unknown error'}`);
+        throw new Error(`Razorpay API: ${res.status} â ${err.detail || err.error || 'Unknown error'}`);
       }
 
       const data = await res.json();
@@ -248,8 +257,8 @@ async function fetchRazorpayPayments() {
 
     // Filter: only captured payments for the selected packages
     const targetAmounts = [];
-    if (incI) targetAmounts.push(1199900); // ₹11,999 in paise
-    if (incN) targetAmounts.push(24900);   // ₹249 in paise
+    if (incI) targetAmounts.push(1199900); // â¹11,999 in paise
+    if (incN) targetAmounts.push(24900);   // â¹249 in paise
 
     const captured = allPayments.filter(p =>
       p.status === 'captured' && targetAmounts.includes(p.amount)
@@ -325,7 +334,7 @@ async function fetchRazorpayPayments() {
         name: existing && existing.name ? existing.name : name.trim(),
         email: (p.email || '').trim(),
         phone: (p.contact || '').trim(),
-        package: pkg ? pkg.label : `₹${amountRupees}`,
+        package: pkg ? pkg.label : `â¹${amountRupees}`,
         packageKey: pkg ? pkg.key : 'other',
         paymentDate,
         consultant, status, remarks,
@@ -338,7 +347,7 @@ async function fetchRazorpayPayments() {
     state.authors = state.authors.concat(newAuthors);
 
     showRpStatus(
-      `Done! ${captured.length} bestseller payments → ${unique.length} unique authors. ${newAuthors.length} new added (${preAssigned} matched trackers, ${newAssigned} round-robin). Total: ${state.authors.length} authors.`,
+      `Done! ${captured.length} bestseller payments â ${unique.length} unique authors. ${newAuthors.length} new added (${preAssigned} matched trackers, ${newAssigned} round-robin). Total: ${state.authors.length} authors.`,
       'success'
     );
     refreshUI();
@@ -349,7 +358,7 @@ async function fetchRazorpayPayments() {
   }
 }
 
-// ── Auto-load pre-built tracker data ──────────────────────────────────────────
+// ââ Auto-load pre-built tracker data ââââââââââââââââââââââââââââââââââââââââââ
 function loadPreBuiltTrackerData() {
   if (typeof TRACKER_DATA === 'undefined') return;
   const consultantCounts = {};
@@ -375,7 +384,7 @@ function loadPreBuiltTrackerData() {
   console.log(`Pre-loaded ${Object.keys(state.existingMap).length} authors from tracker data:`, consultantCounts);
 }
 
-// ── Consultant Tracker Import (manual override) ──────────────────────────────
+// ââ Consultant Tracker Import (manual override) ââââââââââââââââââââââââââââââ
 function loadTrackerCSV() {
   const file = dom.trackerCsv.files[0];
   const consultant = dom.trackerConsultant.value;
@@ -392,7 +401,7 @@ function loadTrackerCSV() {
         if (!email) return;
 
         const name = (row['Name'] || row['Author'] || row['name'] || '').trim();
-        const yesVal = (v) => v && (v.toLowerCase() === 'yes' || v === '✓' || v === '✔' || v === 'done' || v === 'Done' || v === 'TRUE');
+        const yesVal = (v) => v && (v.toLowerCase() === 'yes' || v === 'â' || v === 'â' || v === 'done' || v === 'Done' || v === 'TRUE');
 
         state.existingMap[email] = {
           consultant: consultant,
@@ -432,11 +441,11 @@ function renderTrackerTags() {
   if (state.loadedTrackers.length === 0) { dom.trackerLoaded.innerHTML = ''; return; }
   const totalAuthors = Object.keys(state.existingMap).length;
   dom.trackerLoaded.innerHTML = state.loadedTrackers.map(c =>
-    `<span class="tracker-tag">${c} ✓</span>`
+    `<span class="tracker-tag">${c} â</span>`
   ).join('') + `<span class="tracker-tag" style="background:#e0f2fe;color:#0369a1">${totalAuthors} authors mapped</span>`;
 }
 
-// ── CSV Parsing ──────────────────────────────────────────────────────────────
+// ââ CSV Parsing ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function handleFile(file) {
   if (!file) return;
   showStatus('Parsing CSV...', 'info');
@@ -502,7 +511,7 @@ function importAndAssign() {
     return {
       id: row.id || `a-${i}`, name: existing && existing.name ? existing.name : extractName(row),
       email: (row.email || '').trim(), phone: (row.contact || '').trim(),
-      package: pkg ? pkg.label : `₹${amt}`, packageKey: pkg ? pkg.key : 'other',
+      package: pkg ? pkg.label : `â¹${amt}`, packageKey: pkg ? pkg.key : 'other',
       paymentDate: row.created_at || '', consultant, status, remarks,
       introEmail, authorResponse, followUp, markedYes,
       filesGenerated, addressMarketing, primePlacement, confirmationEmail,
@@ -519,9 +528,9 @@ function extractName(row) {
   return row.email ? row.email.split('@')[0] : 'Unknown';
 }
 function parseDate(s) { if (!s) return 0; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/); return m ? new Date(m[3], m[2]-1, m[1], m[4], m[5], m[6]).getTime() : new Date(s).getTime() || 0; }
-function formatDate(s) { if (!s) return '—'; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? `${m[1]}/${m[2]}/${m[3]}` : s; }
+function formatDate(s) { if (!s) return 'â'; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? `${m[1]}/${m[2]}/${m[3]}` : s; }
 
-// ── Sample Data ──────────────────────────────────────────────────────────────
+// ââ Sample Data ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadSampleData() {
   state.rrIndex = 0;
   const s = [
@@ -540,7 +549,7 @@ function loadSampleData() {
   showStatus('Sample data loaded.', 'success'); refreshUI();
 }
 
-// ── Actions ──────────────────────────────────────────────────────────────────
+// ââ Actions ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function autoAssign() {
   state.rrIndex = 0;
   state.authors.forEach(a => { a.consultant = ACTIVE_CONSULTANTS[state.rrIndex % ACTIVE_CONSULTANTS.length].name; a.status = 'assigned'; state.rrIndex++; });
@@ -557,7 +566,7 @@ function toggleStage(id, stage) {
   if (a) { a[stage] = !a[stage]; refreshUI(); }
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
+// ââ Export ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function updateRemarks(id, val) { const a = state.authors.find(x => x.id === id); if (a) a.remarks = val; }
 
 function exportCSV() {
@@ -576,7 +585,7 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-// ── Team View ────────────────────────────────────────────────────────────────
+// ââ Team View ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function getViewAuthors() {
   if (state.currentView === 'admin') return state.authors;
   return state.authors.filter(a => a.consultant === state.currentView);
@@ -616,7 +625,7 @@ function switchView(view) {
   refreshUI();
 }
 
-// ── UI Rendering ─────────────────────────────────────────────────────────────
+// ââ UI Rendering âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function refreshUI() { updateStats(); renderTable(); renderWorkload(); renderTickets(); toggleButtons(); }
 
 function updateStats() {
@@ -658,7 +667,7 @@ function renderTable() {
   // Update section heading
   const sectionH2 = document.querySelector('#assignments-section h2');
   if (sectionH2) {
-    sectionH2.textContent = isTeamView ? `My Authors — ${state.currentView}` : 'Author Assignments & Workflow';
+    sectionH2.textContent = isTeamView ? `My Authors â ${state.currentView}` : 'Author Assignments & Workflow';
   }
   let rows = getViewAuthors();
   if (search) rows = rows.filter(a => a.name.toLowerCase().includes(search) || a.email.toLowerCase().includes(search) || (a.consultant && a.consultant.toLowerCase().includes(search)));
@@ -670,7 +679,7 @@ function renderTable() {
   const thead = document.querySelector('#assignments-table thead tr');
 
   if (isTeamView) {
-    // ── TEAM VIEW: simplified ticket-reply focused table ──
+    // ââ TEAM VIEW: simplified ticket-reply focused table ââ
     if (thead) {
       thead.innerHTML = '<th>#</th><th>Author</th><th>Email</th><th>Package</th><th>Date</th><th>Status</th><th>FD Tickets</th><th>Action</th><th>Remarks</th>';
     }
@@ -726,7 +735,7 @@ function renderTable() {
     }).join('');
 
   } else {
-    // ── ADMIN VIEW: full workflow table ──
+    // ââ ADMIN VIEW: full workflow table ââ
     if (thead) {
       thead.innerHTML = '<th>Author</th><th>Email</th><th>Package</th><th>Date</th><th>Consultant</th><th>Intro Email</th><th>Author Resp.</th><th>Follow-up</th><th>Marked Yes</th><th>Status</th><th>Files Gen.</th><th>Addr &amp; Mktg</th><th>Prime Place.</th><th>Confirm Email</th><th>Remarks</th><th>FD</th>';
     }
@@ -736,7 +745,7 @@ function renderTable() {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
       const conOpts = CONSULTANTS.map(c => `<option value="${c.name}" ${a.consultant === c.name ? 'selected' : ''}>${c.name}${c.active ? '' : ' (Left)'}</option>`).join('');
       const tix = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase()).length;
-      const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">—</span>';
+      const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">â</span>';
 
       const ck = (stage) => `<input type="checkbox" ${a[stage] ? 'checked' : ''} onchange="toggleStage('${a.id}','${stage}')" class="stage-cb">`;
 
@@ -760,7 +769,7 @@ function renderTable() {
         <td class="td-center">${ck('addressMarketing')}</td>
         <td class="td-center">${ck('primePlacement')}</td>
         <td class="td-center">${ck('confirmationEmail')}</td>
-        <td><input type="text" value="${esc(a.remarks||'')}" onchange="updateRemarks('${a.id}',this.value)" class="remarks-input" placeholder="—"></td>
+        <td><input type="text" value="${esc(a.remarks||'')}" onchange="updateRemarks('${a.id}',this.value)" class="remarks-input" placeholder="â"></td>
         <td class="td-center">${tBadge}</td>
       </tr>`;
     }).join('');
@@ -775,7 +784,7 @@ function renderWorkload() {
     : CONSULTANTS.filter(c => c.active || state.authors.some(a => a.consultant === c.name));
 
   if (isTeamView) {
-    // ── TEAM VIEW: summary cards with action-focused stats ──
+    // ââ TEAM VIEW: summary cards with action-focused stats ââ
     const c = visibleConsultants[0];
     if (!c) return;
     const assigned = state.authors.filter(a => a.consultant === c.name);
@@ -797,7 +806,7 @@ function renderWorkload() {
       <div class="summary-card summary-tickets"><span class="summary-num">${openTix}</span><span class="summary-label">Open Tickets</span></div>
     `;
   } else {
-    // ── ADMIN VIEW: consultant workload cards ──
+    // ââ ADMIN VIEW: consultant workload cards ââ
     dom.workloadGrid.innerHTML = visibleConsultants.map(c => {
       const assigned = state.authors.filter(a => a.consultant === c.name);
       const indian = assigned.filter(a => a.packageKey === 'indian').length;
@@ -806,7 +815,7 @@ function renderWorkload() {
       const done = assigned.filter(a => a.status === 'completed').length;
       const emails = assigned.map(a => a.email.toLowerCase());
       const tix = state.tickets.filter(t => emails.includes(t.requesterEmail)).length;
-      const tag = c.active ? (c.freshdeskAgentId ? '<span class="fd-connected">FD ✓</span>' : '<span class="fd-disconnected">FD ✗</span>') : '<span class="resigned-tag">Resigned</span>';
+      const tag = c.active ? (c.freshdeskAgentId ? '<span class="fd-connected">FD â</span>' : '<span class="fd-disconnected">FD â</span>') : '<span class="resigned-tag">Resigned</span>';
 
       return `<div class="workload-card ${c.active ? '' : 'wl-resigned'}">
         <div class="wl-header"><h3>${esc(c.name)}</h3>${tag}</div>
@@ -841,13 +850,13 @@ function renderTickets() {
   dom.ticketsBody.innerHTML = rows.map(t => {
     const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
     const sc = `fd-status-${t.status.toLowerCase()}`;
-    const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
+    const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">â ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">â</span>');
     return `<tr>
       <td><a href="https://${FD_DOMAIN}/a/tickets/${t.id}" target="_blank" class="ticket-link">#${t.id}</a></td>
       <td class="td-subject">${esc(t.subject)}</td>
       <td class="td-email">${esc(t.requesterEmail)}</td>
-      <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">—</span>'}</td>
-      <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">—</span>'}</td>
+      <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">â</span>'}</td>
+      <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">â</span>'}</td>
       <td><span class="badge ${sc}">${t.status}</span></td>
       <td>${act}</td>
     </tr>`;
@@ -863,7 +872,7 @@ function showStatus(m, t) { dom.apiStatus.textContent = m; dom.apiStatus.classNa
 function showFdStatus(m, t) { dom.fdStatus.textContent = m; dom.fdStatus.className = `status-msg status-${t}`; dom.fdStatus.classList.remove('hidden'); clearTimeout(showFdStatus._t); showFdStatus._t = setTimeout(() => dom.fdStatus.classList.add('hidden'), 10000); }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// ── Events ───────────────────────────────────────────────────────────────────
+// ââ Events âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 dom.csvFile.addEventListener('change', e => handleFile(e.target.files[0]));
 dom.btnImport.addEventListener('click', importAndAssign);
 dom.btnSample.addEventListener('click', loadSampleData);
@@ -918,7 +927,7 @@ dom.dropZone.addEventListener('dragover', e => { e.preventDefault(); dom.dropZon
 dom.dropZone.addEventListener('dragleave', () => dom.dropZone.classList.remove('drag-over'));
 dom.dropZone.addEventListener('drop', e => { e.preventDefault(); dom.dropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && f.name.endsWith('.csv')) handleFile(f); else showStatus('Drop a .csv file.', 'error'); });
 
-// ── Startup ──────────────────────────────────────────────────────────────────
+// ââ Startup ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 loadPreBuiltTrackerData();
 loadPreBuiltAuthors();
 
