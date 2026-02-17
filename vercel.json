@@ -1,8 +1,27 @@
 {
-  "framework": null,
-  "functions": {
-    "api/razorpay-webhook.js": {
-      "maxDuration": 10
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/api/fd/(.*)",
+      "dest": "/api/fd.py"
+    },
+    {
+      "src": "/api/rp/(.*)",
+      "dest": "/api/rp.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
 }

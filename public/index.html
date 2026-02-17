@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookleaf – Author–Consultant Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div class="header-left">
+        <h1>Bookleaf – Author–Consultant Tracker</h1>
+        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration</p>
+      </div>
+      <div class="header-right">
+        <div class="identity-selector">
+          <label class="identity-label">Viewing as:</label>
+          <select id="identity-select" class="identity-dropdown">
+            <option value="admin">All Authors (Admin)</option>
+            <option value="Vandana">Vandana Pradhan</option>
+            <option value="Sapna">Sapna Kumari</option>
+            <option value="Tannu">Tannu Tiwari</option>
+            <option value="Roosha">Roosha</option>
+            <option value="Firdaus">Firdaus (Resigned)</option>
+          </select>
+          <span id="identity-badge" class="identity-badge identity-admin">Admin View</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Stats -->
+    <section id="stats" class="stats-row">
+      <div class="stat-card"><span class="stat-value" id="stat-authors">0</span><span class="stat-label">Authors</span></div>
+      <div class="stat-card accent-indian"><span class="stat-value" id="stat-indian">0</span><span class="stat-label">Indian Bestseller</span></div>
+      <div class="stat-card accent-intl"><span class="stat-value" id="stat-intl">0</span><span class="stat-label">Intl Bestseller</span></div>
+      <div class="stat-card accent-fd"><span class="stat-value" id="stat-tickets">0</span><span class="stat-label">FD Tickets</span></div>
+      <div class="stat-card accent-good"><span class="stat-value" id="stat-good">0</span><span class="stat-label">Good to Go</span></div>
+      <div class="stat-card"><span class="stat-value" id="stat-assigned">0</span><span class="stat-label">Assigned</span></div>
+    </section>
+
+    <!-- Consultant Workload -->
+    <section id="workload-section" class="card">
+      <h2>Consultant Workload</h2>
+      <div id="workload-grid" class="workload-grid">
+        <p class="placeholder-text">Loading...</p>
+      </div>
+    </section>
+
+    <!-- Author Assignments Table -->
+    <section id="assignments-section" class="card">
+      <h2>Author Assignments &amp; Workflow</h2>
+      <div class="table-controls">
+        <input type="text" id="search-input" placeholder="Search author, email, consultant..." class="search-input">
+        <select id="filter-package" class="filter-select">
+          <option value="all">All Packages</option>
+          <option value="indian">Indian Bestseller</option>
+          <option value="intl">Intl Bestseller</option>
+        </select>
+        <select id="filter-consultant" class="filter-select">
+          <option value="all">All Consultants</option>
+          <option value="Vandana">Vandana</option>
+          <option value="Sapna">Sapna</option>
+          <option value="Tannu">Tannu</option>
+          <option value="Roosha">Roosha</option>
+          <option value="Firdaus">Firdaus (Resigned)</option>
+        </select>
+        <select id="filter-status" class="filter-select">
+          <option value="all">All Statuses</option>
+          <option value="assigned">Assigned</option>
+          <option value="in-progress">In Progress</option>
+          <option value="good-to-go">Good to Go</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="table-wrapper">
+        <table id="assignments-table">
+          <thead>
+            <tr>
+              <th>Author</th>
+              <th>Email</th>
+              <th>Package</th>
+              <th>Date</th>
+              <th>Consultant</th>
+              <th>Intro Email</th>
+              <th>Author Resp.</th>
+              <th>Follow-up</th>
+              <th>Marked Yes</th>
+              <th>Status</th>
+              <th>Files Gen.</th>
+              <th>Addr &amp; Mktg</th>
+              <th>Prime Place.</th>
+              <th>Confirm Email</th>
+              <th>Remarks</th>
+              <th>FD</th>
+            </tr>
+          </thead>
+          <tbody id="assignments-body">
+            <tr class="empty-row"><td colspan="16">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-row">
+      <button id="btn-export" class="btn btn-secondary" disabled>Export CSV</button>
+      <button id="btn-auto-assign" class="btn btn-primary" disabled>Re-Assign New Authors (Round Robin)</button>
+      <button id="btn-clear-assignments" class="btn btn-danger" disabled>Clear All Assignments</button>
+    </section>
+
+    <!-- Admin Tools (collapsible) -->
+    <details class="admin-section">
+      <summary class="admin-toggle">Admin Tools</summary>
+      <div class="config-row">
+        <section id="razorpay-panel" class="card">
+          <h2>Razorpay Integration</h2>
+          <div class="config-form">
+            <div class="field">
+              <label>Razorpay Key ID</label>
+              <input type="text" id="rp-key-id" placeholder="rzp_live_xxxxxxxxxxxx">
+            </div>
+            <div class="field">
+              <label>Razorpay Key Secret</label>
+              <input type="password" id="rp-key-secret" placeholder="Paste your Razorpay key secret here">
+            </div>
+            <div class="field">
+              <label>Date Range</label>
+              <div class="date-range-row">
+                <input type="date" id="rp-date-from" class="date-input">
+                <span class="date-separator">to</span>
+                <input type="date" id="rp-date-to" class="date-input">
+              </div>
+            </div>
+            <div class="field">
+              <label>Filter by Package</label>
+              <div class="checkbox-row">
+                <label class="checkbox-label"><input type="checkbox" id="filter-indian" checked> ₹11,999 – Indian Bestseller</label>
+                <label class="checkbox-label"><input type="checkbox" id="filter-intl" checked> ₹249 – Intl Bestseller</label>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button id="btn-rp-fetch" class="btn btn-primary" disabled>Fetch Payments &amp; Sync</button>
+              <button id="btn-load-sample" class="btn btn-secondary">Sample Data</button>
+            </div>
+            <div id="rp-status" class="status-msg hidden"></div>
+            <div class="rp-info">
+              <p class="info-text">Fetches captured payments from Razorpay API. New authors are auto-assigned via round-robin. Existing authors keep their assignments.</p>
+            </div>
+          </div>
+          <!-- Hidden CSV upload (fallback) -->
+          <details class="csv-fallback">
+            <summary class="csv-fallback-toggle">Manual CSV Upload (Fallback)</summary>
+            <div class="csv-fallback-body">
+              <div class="field">
+                <div class="file-upload-area" id="drop-zone">
+                  <input type="file" id="csv-file" accept=".csv">
+                  <p>Click or drag &amp; drop Razorpay CSV</p>
+                </div>
+              </div>
+              <div class="field">
+                <label>Manual Tracker Override</label>
+                <div class="tracker-upload-row">
+                  <select id="tracker-consultant" class="filter-select">
+                    <option value="Vandana">Vandana</option>
+                    <option value="Sapna">Sapna</option>
+                    <option value="Tannu">Tannu</option>
+                    <option value="Roosha">Roosha</option>
+                    <option value="Firdaus">Firdaus</option>
+                  </select>
+                  <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
+                  <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
+                </div>
+                <div id="tracker-status" class="status-msg hidden"></div>
+                <div id="tracker-loaded" class="tracker-tags"></div>
+              </div>
+              <div class="btn-row">
+                <button id="btn-import" class="btn btn-primary" disabled>Import CSV &amp; Auto-Assign</button>
+              </div>
+              <div id="api-status" class="status-msg hidden"></div>
+            </div>
+          </details>
+        </section>
+
+        <section id="freshdesk-panel" class="card">
+          <h2>Freshdesk Integration</h2>
+          <div class="config-form">
+            <div class="field">
+              <label>Freshdesk API Key</label>
+              <input type="password" id="fd-api-key" placeholder="Paste your Freshdesk API key here">
+            </div>
+            <div class="field">
+              <label>Domain</label>
+              <input type="text" id="fd-domain" value="bookleafpublishing.freshdesk.com" readonly class="readonly-input">
+            </div>
+            <div class="btn-row">
+              <button id="btn-fd-fetch" class="btn btn-primary" disabled>Fetch &amp; Sync Tickets</button>
+              <button id="btn-fd-auto-assign" class="btn btn-accent" disabled>Auto-Assign Tickets</button>
+            </div>
+            <div id="fd-status" class="status-msg hidden"></div>
+            <div class="fd-info">
+              <p class="info-text">Tickets auto-match to authors by email. Resolved tickets auto-mark authors as "Good to Go".</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </details>
+
+    <!-- Freshdesk Tickets Table -->
+    <section id="tickets-section" class="card hidden">
+      <h2>Freshdesk Tickets – Author Matches</h2>
+      <div class="table-controls">
+        <input type="text" id="ticket-search" placeholder="Search tickets..." class="search-input">
+        <select id="ticket-filter-match" class="filter-select">
+          <option value="all">All Tickets</option>
+          <option value="matched">Matched</option>
+          <option value="unmatched">Unmatched</option>
+        </select>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket #</th>
+              <th>Subject</th>
+              <th>Requester</th>
+              <th>Author</th>
+              <th>Consultant</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>Internal Tool &middot; Bookleaf Publishing &middot; Author–Consultant Tracker</p></footer>
+  <script src="tracker-data.js"></script>
+  <script src="authors-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
