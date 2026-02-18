@@ -560,39 +560,98 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.7rem; text-transfo
 }
 .webhook-log-section { border-top: 1px solid var(--border); padding-top: 12px; }
 
-/* ── Callback Section ─────────────────────────────────────────────────────── */
+/* ── Callback / Booking Section ───────────────────────────────────────────── */
 .callback-content {
   border: 1px solid var(--border);
   border-top: none;
   border-radius: 0 0 var(--radius) var(--radius);
   padding: 16px;
 }
-.callback-content .card { margin-bottom: 0; }
-.callback-content .config-row { margin-bottom: 16px; }
-.callback-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 12px;
+.callback-content .card { margin-bottom: 16px; }
+.callback-content .card:last-child { margin-bottom: 0; }
+
+/* Call Overview Stats */
+.call-overview-stats {
+  margin-bottom: 8px;
 }
-.callback-stats-grid .summary-card { min-width: auto; padding: 12px 10px; }
-.callback-stats-grid .summary-num { font-size: 1.5rem; }
 
-/* Priority badges */
-.priority-urgent { background: #fee2e2; color: var(--danger); font-weight: 700; }
-.priority-high { background: #fff7ed; color: var(--fd); font-weight: 600; }
-.priority-normal { background: #e5e7eb; color: var(--text-muted); }
-
-/* Callback status badges */
-.cb-status-pending { background: #fef3c7; color: #92400e; }
-.cb-status-scheduled { background: #e0f2fe; color: #0369a1; }
-.cb-status-completed { background: #dcfce7; color: var(--success); }
-.cb-status-overdue { background: #fee2e2; color: var(--danger); }
-.cb-status-cancelled { background: #e5e7eb; color: var(--text-muted); }
-
-/* Callback action buttons */
-.cb-action-row { display: flex; gap: 4px; }
-.cb-action-row .btn { padding: 3px 8px; font-size: 0.7rem; }
+/* ── Author Booking View (Calendly-style) ────────────────────────────────── */
+#author-callback-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.author-callback-container {
+  width: 100%;
+  max-width: 640px;
+}
+.author-callback-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.author-callback-header h1 {
+  font-size: 1.6rem;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+.author-callback-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.author-callback-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.author-callback-card h2 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+.acb-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.acb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.acb-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.acb-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.acb-radio:hover {
+  background: #f0f4ff;
+  border-color: #c7d2fe;
+}
+.acb-radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #6366f1;
+}
+.acb-summary-box {
+  margin-top: 12px;
+}
 
 /* Webhook event status */
 .webhook-ok { color: var(--success); font-weight: 600; }
@@ -616,5 +675,6 @@ footer {
   .workload-grid { grid-template-columns: 1fr; }
   .header-row { flex-direction: column; align-items: flex-start; }
   .identity-selector { width: 100%; }
-  .callback-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .author-callback-card { padding: 20px; }
+  #author-callback-view { padding: 16px; }
 }

@@ -12,7 +12,7 @@
     <div class="header-row">
       <div class="header-left">
         <h1>Bookleaf – Author–Consultant Tracker</h1>
-        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration &middot; Razorpay Webhook &middot; Callback Tracker</p>
+        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration &middot; Razorpay Webhook &middot; Slot Booking</p>
       </div>
       <div class="header-right">
         <div class="identity-selector">
@@ -116,73 +116,45 @@
     <details class="admin-section">
       <summary class="admin-toggle">Admin Tools</summary>
       <div class="config-row">
-        <section id="razorpay-panel" class="card">
-          <h2>Razorpay Integration</h2>
+        <section id="import-panel" class="card">
+          <h2>Data Import</h2>
           <div class="config-form">
             <div class="field">
-              <label>Razorpay Key ID</label>
-              <input type="text" id="rp-key-id" placeholder="rzp_live_xxxxxxxxxxxx">
-            </div>
-            <div class="field">
-              <label>Razorpay Key Secret</label>
-              <input type="password" id="rp-key-secret" placeholder="Paste your Razorpay key secret here">
-            </div>
-            <div class="field">
-              <label>Date Range</label>
-              <div class="date-range-row">
-                <input type="date" id="rp-date-from" class="date-input">
-                <span class="date-separator">to</span>
-                <input type="date" id="rp-date-to" class="date-input">
+              <div class="file-upload-area" id="drop-zone">
+                <input type="file" id="csv-file" accept=".csv">
+                <p>Click or drag &amp; drop Razorpay CSV export</p>
               </div>
             </div>
             <div class="field">
               <label>Filter by Package</label>
               <div class="checkbox-row">
-                <label class="checkbox-label"><input type="checkbox" id="filter-indian" checked> ₹11,999 – Indian Bestseller</label>
-                <label class="checkbox-label"><input type="checkbox" id="filter-intl" checked> ₹249 – Intl Bestseller</label>
+                <label class="checkbox-label"><input type="checkbox" id="filter-indian" checked> Indian Bestseller</label>
+                <label class="checkbox-label"><input type="checkbox" id="filter-intl" checked> Intl Bestseller</label>
               </div>
+            </div>
+            <div class="field">
+              <label>Manual Tracker Override</label>
+              <div class="tracker-upload-row">
+                <select id="tracker-consultant" class="filter-select">
+                  <option value="Vandana">Vandana</option>
+                  <option value="Sapna">Sapna</option>
+                  <option value="Tannu">Tannu</option>
+                  <option value="Roosha">Roosha</option>
+                  <option value="Firdaus">Firdaus</option>
+                </select>
+                <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
+                <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
+              </div>
+              <div id="tracker-status" class="status-msg hidden"></div>
+              <div id="tracker-loaded" class="tracker-tags"></div>
             </div>
             <div class="btn-row">
-              <button id="btn-rp-fetch" class="btn btn-primary" disabled>Fetch Payments &amp; Sync</button>
+              <button id="btn-import" class="btn btn-primary" disabled>Import CSV &amp; Auto-Assign</button>
               <button id="btn-load-sample" class="btn btn-secondary">Sample Data</button>
             </div>
-            <div id="rp-status" class="status-msg hidden"></div>
-            <div class="rp-info">
-              <p class="info-text">Fetches captured payments from Razorpay API. New authors are auto-assigned via round-robin. Existing authors keep their assignments.</p>
-            </div>
+            <div id="api-status" class="status-msg hidden"></div>
+            <p class="info-text" style="margin-top:4px">Upload Razorpay CSV export or use Sample Data. New authors are auto-assigned via round-robin.</p>
           </div>
-          <!-- Hidden CSV upload (fallback) -->
-          <details class="csv-fallback">
-            <summary class="csv-fallback-toggle">Manual CSV Upload (Fallback)</summary>
-            <div class="csv-fallback-body">
-              <div class="field">
-                <div class="file-upload-area" id="drop-zone">
-                  <input type="file" id="csv-file" accept=".csv">
-                  <p>Click or drag &amp; drop Razorpay CSV</p>
-                </div>
-              </div>
-              <div class="field">
-                <label>Manual Tracker Override</label>
-                <div class="tracker-upload-row">
-                  <select id="tracker-consultant" class="filter-select">
-                    <option value="Vandana">Vandana</option>
-                    <option value="Sapna">Sapna</option>
-                    <option value="Tannu">Tannu</option>
-                    <option value="Roosha">Roosha</option>
-                    <option value="Firdaus">Firdaus</option>
-                  </select>
-                  <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
-                  <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
-                </div>
-                <div id="tracker-status" class="status-msg hidden"></div>
-                <div id="tracker-loaded" class="tracker-tags"></div>
-              </div>
-              <div class="btn-row">
-                <button id="btn-import" class="btn btn-primary" disabled>Import CSV &amp; Auto-Assign</button>
-              </div>
-              <div id="api-status" class="status-msg hidden"></div>
-            </div>
-          </details>
         </section>
 
         <section id="freshdesk-panel" class="card">
@@ -262,141 +234,115 @@
       </div>
     </details>
 
-    <!-- Callback Form & Tracker -->
+    <!-- Consultant Booking Links & Tracking -->
     <details class="admin-section" id="callback-section">
-      <summary class="admin-toggle">Callback Requests</summary>
+      <summary class="admin-toggle">Consultant Booking Links</summary>
       <div class="callback-content">
-        <div class="config-row">
-          <!-- Callback Form -->
-          <section class="card">
-            <h2>Request Callback</h2>
-            <div class="config-form" id="callback-form">
-              <div class="field">
-                <label>Author Name</label>
-                <input type="text" id="cb-author-name" placeholder="Enter author name" list="cb-author-list">
-                <datalist id="cb-author-list"></datalist>
-              </div>
-              <div class="field">
-                <label>Author Email</label>
-                <input type="text" id="cb-author-email" placeholder="author@example.com" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Phone Number</label>
-                <input type="text" id="cb-phone" placeholder="+91XXXXXXXXXX" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Assigned Consultant</label>
-                <input type="text" id="cb-consultant" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Callback Reason</label>
-                <select id="cb-reason" class="filter-select">
-                  <option value="">Select reason...</option>
-                  <option value="manuscript-query">Manuscript Query</option>
-                  <option value="payment-issue">Payment Issue</option>
-                  <option value="publishing-status">Publishing Status Update</option>
-                  <option value="marketing-query">Marketing Query</option>
-                  <option value="general-inquiry">General Inquiry</option>
-                  <option value="complaint">Complaint</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Priority</label>
-                <select id="cb-priority" class="filter-select">
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Preferred Time</label>
-                <div class="date-range-row">
-                  <input type="date" id="cb-date" class="date-input">
-                  <input type="time" id="cb-time" class="date-input">
-                </div>
-              </div>
-              <div class="field">
-                <label>Notes</label>
-                <textarea id="cb-notes" class="webhook-textarea" rows="3" placeholder="Additional notes about the callback request..."></textarea>
-              </div>
-              <div class="btn-row">
-                <button id="btn-cb-submit" class="btn btn-primary" disabled>Submit Callback Request</button>
-                <button id="btn-cb-clear" class="btn btn-secondary">Clear Form</button>
-              </div>
-              <div id="cb-form-status" class="status-msg hidden"></div>
-            </div>
-          </section>
+        <!-- Booking Overview -->
+        <section class="card">
+          <h2>Booking Overview</h2>
+          <p class="info-text" style="margin:-8px 0 12px">Generate a shareable booking link for each author. Authors can pick a slot (10 AM – 6 PM, Mon–Sat) and confirm. Track all bookings below.</p>
+          <div class="call-overview-stats" id="call-overview-stats"></div>
+        </section>
 
-          <!-- Callback Stats -->
-          <section class="card">
-            <h2>Callback Summary</h2>
-            <div class="callback-stats-grid" id="callback-stats">
-              <div class="summary-card summary-total"><span class="summary-num" id="cb-stat-total">0</span><span class="summary-label">Total Requests</span></div>
-              <div class="summary-card summary-pending"><span class="summary-num" id="cb-stat-pending">0</span><span class="summary-label">Pending</span></div>
-              <div class="summary-card summary-inprog"><span class="summary-num" id="cb-stat-scheduled">0</span><span class="summary-label">Scheduled</span></div>
-              <div class="summary-card summary-done"><span class="summary-num" id="cb-stat-completed">0</span><span class="summary-label">Completed</span></div>
-              <div class="summary-card summary-tickets"><span class="summary-num" id="cb-stat-overdue">0</span><span class="summary-label">Overdue</span></div>
-              <div class="summary-card" style="border-left:4px solid var(--warning)"><span class="summary-num" id="cb-stat-cancelled">0</span><span class="summary-label">Cancelled</span></div>
-            </div>
-            <h3 style="font-size:0.9rem;margin:16px 0 8px">By Consultant</h3>
-            <div id="cb-consultant-breakdown" class="workload-grid"></div>
-          </section>
-        </div>
-
-        <!-- Callback Tracker Table -->
+        <!-- Author Booking Tracker Table -->
         <section class="card" style="margin-top:0">
-          <h2>Callback Tracker</h2>
+          <h2>Author Booking Tracker</h2>
           <div class="table-controls">
-            <input type="text" id="cb-search" placeholder="Search callbacks..." class="search-input">
-            <select id="cb-filter-status" class="filter-select">
+            <input type="text" id="call-search" placeholder="Search authors..." class="search-input">
+            <select id="call-filter-status" class="filter-select">
               <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="scheduled">Scheduled</option>
+              <option value="pending">No Booking</option>
+              <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <select id="cb-filter-consultant" class="filter-select">
+            <select id="call-filter-consultant" class="filter-select">
               <option value="all">All Consultants</option>
               <option value="Vandana">Vandana</option>
               <option value="Sapna">Sapna</option>
               <option value="Tannu">Tannu</option>
               <option value="Roosha">Roosha</option>
-              <option value="Firdaus">Firdaus</option>
             </select>
-            <select id="cb-filter-priority" class="filter-select">
-              <option value="all">All Priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="normal">Normal</option>
-            </select>
-            <button id="btn-cb-export" class="btn btn-secondary btn-sm">Export Callbacks</button>
+            <button id="btn-call-export" class="btn btn-secondary btn-sm">Export Bookings</button>
           </div>
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
                   <th>Author</th>
-                  <th>Phone</th>
+                  <th>Email</th>
                   <th>Consultant</th>
-                  <th>Reason</th>
-                  <th>Priority</th>
-                  <th>Scheduled</th>
+                  <th>Booking</th>
+                  <th>Date &amp; Time</th>
                   <th>Status</th>
-                  <th>Notes</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody id="cb-tracker-body">
-                <tr class="empty-row"><td colspan="10">No callback requests yet.</td></tr>
+              <tbody id="call-tracker-body">
+                <tr class="empty-row"><td colspan="7">No author data loaded.</td></tr>
               </tbody>
             </table>
           </div>
         </section>
       </div>
     </details>
+
+    <!-- Author Callback Response Form (shown only when ?callback=true) -->
+    <section id="author-callback-view" class="hidden">
+      <div class="author-callback-container">
+        <div class="author-callback-header">
+          <h1>Bookleaf Publishing</h1>
+          <p class="author-callback-subtitle" id="acb-subtitle">Callback Scheduling</p>
+        </div>
+        <div class="author-callback-card">
+          <h2 id="acb-greeting">Hello!</h2>
+          <p id="acb-description" class="acb-desc"></p>
+          <div class="acb-form" id="acb-form">
+            <div class="field">
+              <label>Your Name</label>
+              <input type="text" id="acb-name" readonly class="readonly-input">
+            </div>
+            <div class="field">
+              <label>Your Email</label>
+              <input type="text" id="acb-email" readonly class="readonly-input">
+            </div>
+            <div class="field">
+              <label>Phone Number</label>
+              <input type="text" id="acb-phone" placeholder="+91XXXXXXXXXX">
+            </div>
+            <div class="field">
+              <label>Availability</label>
+              <div class="acb-radio-group">
+                <label class="acb-radio"><input type="radio" name="acb-avail" value="available" checked> I am available for this call</label>
+                <label class="acb-radio"><input type="radio" name="acb-avail" value="later"> Please contact me later</label>
+                <label class="acb-radio"><input type="radio" name="acb-avail" value="specific"> I prefer a specific date/time</label>
+              </div>
+            </div>
+            <div class="field" id="acb-datetime-field" style="display:none">
+              <label>Preferred Date &amp; Time</label>
+              <div class="date-range-row">
+                <input type="date" id="acb-date" class="date-input">
+                <input type="time" id="acb-time" class="date-input">
+              </div>
+            </div>
+            <div class="field">
+              <label>Notes (optional)</label>
+              <textarea id="acb-notes" class="webhook-textarea" rows="3" placeholder="Any specific topics you'd like to discuss..."></textarea>
+            </div>
+            <div class="btn-row">
+              <button id="btn-acb-submit" class="btn btn-primary">Confirm &amp; Notify Consultant</button>
+            </div>
+            <div id="acb-status" class="status-msg hidden"></div>
+          </div>
+          <div id="acb-thankyou" class="hidden">
+            <h3 style="color:var(--success);margin-bottom:8px">Thank you!</h3>
+            <p>Your response has been recorded. Your consultant will be in touch shortly.</p>
+            <div id="acb-response-summary" class="acb-summary-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Freshdesk Tickets Table -->
     <section id="tickets-section" class="card hidden">

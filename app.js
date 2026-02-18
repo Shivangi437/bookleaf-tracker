@@ -1,4 +1,4 @@
-// Ã¢ÂÂÃ¢ÂÂ Config Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Config ============================================================
 const CONSULTANTS = [
   { id: 'c-1', name: 'Vandana', fullName: 'Vandana Pradhan', email: 'vandana@bookleafpub.in', freshdeskAgentId: null, active: true },
   { id: 'c-2', name: 'Sapna',   fullName: 'Sapna Kumari',    email: 'sapna@bookleafpub.in',   freshdeskAgentId: null, active: true },
@@ -35,30 +35,27 @@ const STAGES = [
 // Admin password (change this to your preferred password)
 const ADMIN_PASSWORD = 'bookleaf2025';
 
-// Ã¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == State ============================================================
 const state = {
   authors: [],
   rawCSV: null,
   rrIndex: 0,
   tickets: [],
   fdAgentsLoaded: false,
-  existingMap: {},       // email Ã¢ÂÂ { consultant, stages, remarks } from imported tracker CSVs
+  existingMap: {},       // email -> { consultant, stages, remarks } from imported tracker CSVs
   loadedTrackers: [],    // which consultant trackers have been loaded
   currentView: 'admin',  // 'admin' or consultant name
   adminUnlocked: true,   // starts as admin; lock when switching away
 };
 
-// Ã¢ÂÂÃ¢ÂÂ DOM refs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == DOM refs ============================================================
 const $id = (id) => document.getElementById(id);
 const dom = {
   csvFile: $id('csv-file'), dropZone: $id('drop-zone'),
   filterIndian: $id('filter-indian'), filterIntl: $id('filter-intl'),
   btnImport: $id('btn-import'), btnSample: $id('btn-load-sample'),
   apiStatus: $id('api-status'),
-  // Razorpay
-  rpKeyId: $id('rp-key-id'), rpKeySecret: $id('rp-key-secret'),
-  rpDateFrom: $id('rp-date-from'), rpDateTo: $id('rp-date-to'),
-  btnRpFetch: $id('btn-rp-fetch'), rpStatus: $id('rp-status'),
+  // (Razorpay API removed – data import via CSV/webhook only)
   // Freshdesk
   fdApiKey: $id('fd-api-key'), fdDomain: $id('fd-domain'),
   btnFdFetch: $id('btn-fd-fetch'), btnFdAutoAssign: $id('btn-fd-auto-assign'),
@@ -80,7 +77,7 @@ const dom = {
   identitySelect: $id('identity-select'), identityBadge: $id('identity-badge'),
 };
 
-// Ã¢ÂÂÃ¢ÂÂ Freshdesk API Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Freshdesk API ============================================================
 function fdHeaders() {
   const key = dom.fdApiKey.value.trim();
   return { 'Authorization': 'Basic ' + btoa(key + ':X'), 'Content-Type': 'application/json' };
@@ -88,10 +85,6 @@ function fdHeaders() {
 function fdUrl(path) {
   if (IS_LOCAL) return `/fd-api/${path}`;
   return `https://${FD_DOMAIN}/api/v2/${path}`;
-}
-function rpUrl(path) {
-  if (IS_LOCAL) return `/rp-api/${path}`;
-  return `https://api.razorpay.com/v1/${path}`;
 }
 
 async function loadFreshdeskAgents() {
@@ -146,7 +139,7 @@ async function fetchFreshdeskTickets() {
       };
     });
 
-    // Auto-mark: if Freshdesk ticket is Resolved/Closed Ã¢ÂÂ mark author as "good-to-go"
+    // Auto-mark: if Freshdesk ticket is Resolved/Closed -> mark author as "good-to-go"
     state.tickets.forEach(t => {
       if (t.isMatched && (t.statusCode === 4 || t.statusCode === 5)) {
         const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
@@ -202,179 +195,15 @@ async function assignSingleTicket(ticketId) {
   if (!c || !c.freshdeskAgentId) { showFdStatus(`${ticket.matchedConsultant} not linked.`, 'error'); return; }
   try {
     const res = await fetch(fdUrl(`tickets/${ticketId}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
-    if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} Ã¢ÂÂ ${c.name}`, 'success'); refreshUI(); }
+    if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} -> ${c.name}`, 'success'); refreshUI(); }
     else showFdStatus(`Failed #${ticketId}`, 'error');
   } catch (err) { showFdStatus(`Error: ${err.message}`, 'error'); }
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Razorpay API Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-function rpHeaders() {
-  const keyId = dom.rpKeyId.value.trim();
-  const keySecret = dom.rpKeySecret.value.trim();
-  return { 'Authorization': 'Basic ' + btoa(keyId + ':' + keySecret), 'Content-Type': 'application/json' };
-}
-// rpUrl moved above with fdUrl
 
-function showRpStatus(m, t) {
-  dom.rpStatus.textContent = m;
-  dom.rpStatus.className = `status-msg status-${t}`;
-  dom.rpStatus.classList.remove('hidden');
-  clearTimeout(showRpStatus._t);
-  showRpStatus._t = setTimeout(() => dom.rpStatus.classList.add('hidden'), 12000);
-}
+// (Razorpay API removed - data import via CSV/webhook only)
 
-async function fetchRazorpayPayments() {
-  const keyId = dom.rpKeyId.value.trim();
-  const keySecret = dom.rpKeySecret.value.trim();
-  if (!keyId || !keySecret) { showRpStatus('Enter both Razorpay Key ID and Key Secret.', 'error'); return; }
-
-  const incI = dom.filterIndian.checked, incN = dom.filterIntl.checked;
-  if (!incI && !incN) { showRpStatus('Select at least one package filter.', 'error'); return; }
-
-  // Date range
-  const fromDate = dom.rpDateFrom.value ? new Date(dom.rpDateFrom.value) : null;
-  const toDate = dom.rpDateTo.value ? new Date(dom.rpDateTo.value + 'T23:59:59') : null;
-
-  showRpStatus('Connecting to Razorpay API...', 'info');
-
-  try {
-    let allPayments = [], skip = 0, hasMore = true;
-    const batchSize = 100;
-
-    // Build query params
-    let params = `count=${batchSize}`;
-    if (fromDate) params += `&from=${Math.floor(fromDate.getTime() / 1000)}`;
-    if (toDate) params += `&to=${Math.floor(toDate.getTime() / 1000)}`;
-
-    while (hasMore) {
-      const url = rpUrl(`payments?${params}&skip=${skip}`);
-      showRpStatus(`Fetching payments... (${allPayments.length} so far)`, 'info');
-
-      const res = await fetch(url, { headers: rpHeaders() });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(`Razorpay API: ${res.status} Ã¢ÂÂ ${err.detail || err.error || 'Unknown error'}`);
-      }
-
-      const data = await res.json();
-      const items = data.items || [];
-      allPayments = allPayments.concat(items);
-      hasMore = items.length === batchSize;
-      skip += batchSize;
-
-      // Safety: max 50 pages (5000 payments)
-      if (skip >= 5000) { hasMore = false; }
-
-      // Rate limit: small delay between pages
-      if (hasMore) await new Promise(r => setTimeout(r, 300));
-    }
-
-    showRpStatus(`${allPayments.length} payments fetched. Processing...`, 'info');
-
-    // Filter: only captured payments for the selected packages
-    const targetAmounts = [];
-    if (incI) targetAmounts.push(1199900); // Ã¢ÂÂ¹11,999 in paise
-    if (incN) targetAmounts.push(24900);   // Ã¢ÂÂ¹249 in paise
-
-    const captured = allPayments.filter(p =>
-      p.status === 'captured' && targetAmounts.includes(p.amount)
-    );
-
-    // Deduplicate by email (keep latest payment)
-    const byEmail = {};
-    captured.forEach(p => {
-      const email = (p.email || '').toLowerCase().trim();
-      if (!email) return;
-      if (!byEmail[email] || p.created_at > byEmail[email].created_at) {
-        byEmail[email] = p;
-      }
-    });
-
-    const unique = Object.values(byEmail);
-    unique.sort((a, b) => a.created_at - b.created_at);
-
-    // Merge with existing tracker data + round-robin for new authors
-    state.rrIndex = 0;
-    let preAssigned = 0, newAssigned = 0;
-
-    const newAuthors = unique.map((p, i) => {
-      const email = (p.email || '').toLowerCase().trim();
-      const amountRupees = p.amount / 100;
-      const pkg = PACKAGES[amountRupees];
-      const existing = state.existingMap[email];
-
-      // Check if already in current authors list
-      const alreadyLoaded = state.authors.find(a => a.email.toLowerCase() === email);
-      if (alreadyLoaded) return null; // skip duplicates
-
-      let consultant, status, remarks;
-      let introEmail = false, authorResponse = false, followUp = false, markedYes = false;
-      let filesGenerated = false, addressMarketing = false, primePlacement = false, confirmationEmail = false;
-
-      if (existing) {
-        consultant = existing.consultant;
-        status = existing.status || 'assigned';
-        remarks = existing.remarks || '';
-        introEmail = !!existing.introEmail;
-        authorResponse = !!existing.authorResponse;
-        followUp = !!existing.followUp;
-        markedYes = !!existing.markedYes;
-        filesGenerated = !!existing.filesGenerated;
-        addressMarketing = !!existing.addressMarketing;
-        primePlacement = !!existing.primePlacement;
-        confirmationEmail = !!existing.confirmationEmail;
-        preAssigned++;
-      } else {
-        const c = ACTIVE_CONSULTANTS[state.rrIndex % ACTIVE_CONSULTANTS.length];
-        state.rrIndex++;
-        consultant = c.name;
-        status = 'assigned';
-        remarks = '';
-        newAssigned++;
-      }
-
-      // Extract name from Razorpay notes or card
-      let name = '';
-      try {
-        if (p.notes && typeof p.notes === 'object') {
-          name = p.notes.name || p.notes.registered_name || '';
-        }
-      } catch {}
-      if (!name && p.card && p.card.name) name = p.card.name;
-      if (!name) name = email.split('@')[0];
-
-      const paymentDate = p.created_at ? new Date(p.created_at * 1000).toLocaleDateString('en-IN') : '';
-
-      return {
-        id: p.id || `rp-${i}`,
-        name: existing && existing.name ? existing.name : name.trim(),
-        email: (p.email || '').trim(),
-        phone: (p.contact || '').trim(),
-        package: pkg ? pkg.label : `Ã¢ÂÂ¹${amountRupees}`,
-        packageKey: pkg ? pkg.key : 'other',
-        paymentDate,
-        consultant, status, remarks,
-        introEmail, authorResponse, followUp, markedYes,
-        filesGenerated, addressMarketing, primePlacement, confirmationEmail,
-      };
-    }).filter(Boolean);
-
-    // Add new authors to existing list
-    state.authors = state.authors.concat(newAuthors);
-
-    showRpStatus(
-      `Done! ${captured.length} bestseller payments Ã¢ÂÂ ${unique.length} unique authors. ${newAuthors.length} new added (${preAssigned} matched trackers, ${newAssigned} round-robin). Total: ${state.authors.length} authors.`,
-      'success'
-    );
-    refreshUI();
-
-  } catch (err) {
-    showRpStatus(`Error: ${err.message}`, 'error');
-    console.error('Razorpay API error:', err);
-  }
-}
-
-// Ã¢ÂÂÃ¢ÂÂ Auto-load pre-built tracker data Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Auto-load pre-built tracker data ============================================================
 function loadPreBuiltTrackerData() {
   if (typeof TRACKER_DATA === 'undefined') return;
   const consultantCounts = {};
@@ -400,7 +229,7 @@ function loadPreBuiltTrackerData() {
   console.log(`Pre-loaded ${Object.keys(state.existingMap).length} authors from tracker data:`, consultantCounts);
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Consultant Tracker Import (manual override) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Consultant Tracker Import (manual override) ============================================================
 function loadTrackerCSV() {
   const file = dom.trackerCsv.files[0];
   const consultant = dom.trackerConsultant.value;
@@ -417,7 +246,7 @@ function loadTrackerCSV() {
         if (!email) return;
 
         const name = (row['Name'] || row['Author'] || row['name'] || '').trim();
-        const yesVal = (v) => v && (v.toLowerCase() === 'yes' || v === 'Ã¢ÂÂ' || v === 'Ã¢ÂÂ' || v === 'done' || v === 'Done' || v === 'TRUE');
+        const yesVal = (v) => v && (v.toLowerCase() === 'yes' || v === '✓' || v === '✔' || v === 'done' || v === 'Done' || v === 'TRUE');
 
         state.existingMap[email] = {
           consultant: consultant,
@@ -457,11 +286,11 @@ function renderTrackerTags() {
   if (state.loadedTrackers.length === 0) { dom.trackerLoaded.innerHTML = ''; return; }
   const totalAuthors = Object.keys(state.existingMap).length;
   dom.trackerLoaded.innerHTML = state.loadedTrackers.map(c =>
-    `<span class="tracker-tag">${c} Ã¢ÂÂ</span>`
+    `<span class="tracker-tag">${c} ✓</span>`
   ).join('') + `<span class="tracker-tag" style="background:#e0f2fe;color:#0369a1">${totalAuthors} authors mapped</span>`;
 }
 
-// Ã¢ÂÂÃ¢ÂÂ CSV Parsing Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == CSV Parsing ============================================================
 function handleFile(file) {
   if (!file) return;
   showStatus('Parsing CSV...', 'info');
@@ -527,7 +356,7 @@ function importAndAssign() {
     return {
       id: row.id || `a-${i}`, name: existing && existing.name ? existing.name : extractName(row),
       email: (row.email || '').trim(), phone: (row.contact || '').trim(),
-      package: pkg ? pkg.label : `Ã¢ÂÂ¹${amt}`, packageKey: pkg ? pkg.key : 'other',
+      package: pkg ? pkg.label : `₹${amt}`, packageKey: pkg ? pkg.key : 'other',
       paymentDate: row.created_at || '', consultant, status, remarks,
       introEmail, authorResponse, followUp, markedYes,
       filesGenerated, addressMarketing, primePlacement, confirmationEmail,
@@ -544,9 +373,9 @@ function extractName(row) {
   return row.email ? row.email.split('@')[0] : 'Unknown';
 }
 function parseDate(s) { if (!s) return 0; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/); return m ? new Date(m[3], m[2]-1, m[1], m[4], m[5], m[6]).getTime() : new Date(s).getTime() || 0; }
-function formatDate(s) { if (!s) return 'Ã¢ÂÂ'; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? `${m[1]}/${m[2]}/${m[3]}` : s; }
+function formatDate(s) { if (!s) return '--'; const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? `${m[1]}/${m[2]}/${m[3]}` : s; }
 
-// Ã¢ÂÂÃ¢ÂÂ Sample Data Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Sample Data ============================================================
 function loadSampleData() {
   state.rrIndex = 0;
   const s = [
@@ -565,7 +394,7 @@ function loadSampleData() {
   showStatus('Sample data loaded.', 'success'); refreshUI();
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Actions Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Actions ============================================================
 function autoAssign() {
   state.rrIndex = 0;
   state.authors.forEach(a => { a.consultant = ACTIVE_CONSULTANTS[state.rrIndex % ACTIVE_CONSULTANTS.length].name; a.status = 'assigned'; state.rrIndex++; });
@@ -582,7 +411,7 @@ function toggleStage(id, stage) {
   if (a) { a[stage] = !a[stage]; refreshUI(); }
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Export Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Export ============================================================
 function updateRemarks(id, val) { const a = state.authors.find(x => x.id === id); if (a) a.remarks = val; }
 
 function exportCSV() {
@@ -601,7 +430,7 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Team View Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Team View ============================================================
 function getViewAuthors() {
   if (state.currentView === 'admin') return state.authors;
   return state.authors.filter(a => a.consultant === state.currentView);
@@ -641,7 +470,7 @@ function switchView(view) {
   refreshUI();
 }
 
-// Ã¢ÂÂÃ¢ÂÂ UI Rendering Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == UI Rendering ============================================================
 function refreshUI() { updateStats(); renderTable(); renderWorkload(); renderTickets(); toggleButtons(); }
 
 function updateStats() {
@@ -683,7 +512,7 @@ function renderTable() {
   // Update section heading
   const sectionH2 = document.querySelector('#assignments-section h2');
   if (sectionH2) {
-    sectionH2.textContent = isTeamView ? `My Authors Ã¢ÂÂ ${state.currentView}` : 'Author Assignments & Workflow';
+    sectionH2.textContent = isTeamView ? `My Authors -- ${state.currentView}` : 'Author Assignments & Workflow';
   }
   let rows = getViewAuthors();
   if (search) rows = rows.filter(a => a.name.toLowerCase().includes(search) || a.email.toLowerCase().includes(search) || (a.consultant && a.consultant.toLowerCase().includes(search)));
@@ -695,7 +524,7 @@ function renderTable() {
   const thead = document.querySelector('#assignments-table thead tr');
 
   if (isTeamView) {
-    // Ã¢ÂÂÃ¢ÂÂ TEAM VIEW: simplified ticket-reply focused table Ã¢ÂÂÃ¢ÂÂ
+    // -- TEAM VIEW: simplified ticket-reply focused table --
     if (thead) {
       thead.innerHTML = '<th>#</th><th>Author</th><th>Email</th><th>Package</th><th>Date</th><th>Status</th><th>FD Tickets</th><th>Action</th><th>Remarks</th>';
     }
@@ -751,7 +580,7 @@ function renderTable() {
     }).join('');
 
   } else {
-    // Ã¢ÂÂÃ¢ÂÂ ADMIN VIEW: full workflow table Ã¢ÂÂÃ¢ÂÂ
+    // -- ADMIN VIEW: full workflow table --
     if (thead) {
       thead.innerHTML = '<th>Author</th><th>Email</th><th>Package</th><th>Date</th><th>Consultant</th><th>Intro Email</th><th>Author Resp.</th><th>Follow-up</th><th>Marked Yes</th><th>Status</th><th>Files Gen.</th><th>Addr &amp; Mktg</th><th>Prime Place.</th><th>Confirm Email</th><th>Remarks</th><th>FD</th>';
     }
@@ -761,7 +590,7 @@ function renderTable() {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
       const conOpts = CONSULTANTS.map(c => `<option value="${c.name}" ${a.consultant === c.name ? 'selected' : ''}>${c.name}${c.active ? '' : ' (Left)'}</option>`).join('');
       const tix = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase()).length;
-      const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">Ã¢ÂÂ</span>';
+      const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">--</span>';
 
       const ck = (stage) => `<input type="checkbox" ${a[stage] ? 'checked' : ''} onchange="toggleStage('${a.id}','${stage}')" class="stage-cb">`;
 
@@ -785,7 +614,7 @@ function renderTable() {
         <td class="td-center">${ck('addressMarketing')}</td>
         <td class="td-center">${ck('primePlacement')}</td>
         <td class="td-center">${ck('confirmationEmail')}</td>
-        <td><input type="text" value="${esc(a.remarks||'')}" onchange="updateRemarks('${a.id}',this.value)" class="remarks-input" placeholder="Ã¢ÂÂ"></td>
+        <td><input type="text" value="${esc(a.remarks||'')}" onchange="updateRemarks('${a.id}',this.value)" class="remarks-input" placeholder="--"></td>
         <td class="td-center">${tBadge}</td>
       </tr>`;
     }).join('');
@@ -800,7 +629,7 @@ function renderWorkload() {
     : CONSULTANTS.filter(c => c.active || state.authors.some(a => a.consultant === c.name));
 
   if (isTeamView) {
-    // Ã¢ÂÂÃ¢ÂÂ TEAM VIEW: summary cards with action-focused stats Ã¢ÂÂÃ¢ÂÂ
+    // -- TEAM VIEW: summary cards with action-focused stats --
     const c = visibleConsultants[0];
     if (!c) return;
     const assigned = state.authors.filter(a => a.consultant === c.name);
@@ -822,7 +651,7 @@ function renderWorkload() {
       <div class="summary-card summary-tickets"><span class="summary-num">${openTix}</span><span class="summary-label">Open Tickets</span></div>
     `;
   } else {
-    // Ã¢ÂÂÃ¢ÂÂ ADMIN VIEW: consultant workload cards Ã¢ÂÂÃ¢ÂÂ
+    // -- ADMIN VIEW: consultant workload cards --
     dom.workloadGrid.innerHTML = visibleConsultants.map(c => {
       const assigned = state.authors.filter(a => a.consultant === c.name);
       const indian = assigned.filter(a => a.packageKey === 'indian').length;
@@ -831,7 +660,7 @@ function renderWorkload() {
       const done = assigned.filter(a => a.status === 'completed').length;
       const emails = assigned.map(a => a.email.toLowerCase());
       const tix = state.tickets.filter(t => emails.includes(t.requesterEmail)).length;
-      const tag = c.active ? (c.freshdeskAgentId ? '<span class="fd-connected">FD Ã¢ÂÂ</span>' : '<span class="fd-disconnected">FD Ã¢ÂÂ</span>') : '<span class="resigned-tag">Resigned</span>';
+      const tag = c.active ? (c.freshdeskAgentId ? '<span class="fd-connected">FD ✓</span>' : '<span class="fd-disconnected">FD ✗</span>') : '<span class="resigned-tag">Resigned</span>';
 
       return `<div class="workload-card ${c.active ? '' : 'wl-resigned'}">
         <div class="wl-header"><h3>${esc(c.name)}</h3>${tag}</div>
@@ -866,13 +695,13 @@ function renderTickets() {
   dom.ticketsBody.innerHTML = rows.map(t => {
     const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
     const sc = `fd-status-${t.status.toLowerCase()}`;
-    const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">Ã¢ÂÂ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">Ã¢ÂÂ</span>');
+    const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">-> ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">--</span>');
     return `<tr>
       <td><a href="https://${FD_DOMAIN}/a/tickets/${t.id}" target="_blank" class="ticket-link">#${t.id}</a></td>
       <td class="td-subject">${esc(t.subject)}</td>
       <td class="td-email">${esc(t.requesterEmail)}</td>
-      <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">Ã¢ÂÂ</span>'}</td>
-      <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">Ã¢ÂÂ</span>'}</td>
+      <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">--</span>'}</td>
+      <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">--</span>'}</td>
       <td><span class="badge ${sc}">${t.status}</span></td>
       <td>${act}</td>
     </tr>`;
@@ -888,7 +717,7 @@ function showStatus(m, t) { dom.apiStatus.textContent = m; dom.apiStatus.classNa
 function showFdStatus(m, t) { dom.fdStatus.textContent = m; dom.fdStatus.className = `status-msg status-${t}`; dom.fdStatus.classList.remove('hidden'); clearTimeout(showFdStatus._t); showFdStatus._t = setTimeout(() => dom.fdStatus.classList.add('hidden'), 10000); }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// Ã¢ÂÂÃ¢ÂÂ Events Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Events ============================================================
 dom.csvFile.addEventListener('change', e => handleFile(e.target.files[0]));
 dom.btnImport.addEventListener('click', importAndAssign);
 dom.btnSample.addEventListener('click', loadSampleData);
@@ -899,19 +728,6 @@ dom.searchInput.addEventListener('input', renderTable);
 dom.filterPackage.addEventListener('change', renderTable);
 dom.filterConsultant.addEventListener('change', renderTable);
 dom.filterStatus.addEventListener('change', renderTable);
-// Razorpay
-function checkRpReady() { dom.btnRpFetch.disabled = !(dom.rpKeyId.value.trim() && dom.rpKeySecret.value.trim()); }
-dom.rpKeyId.addEventListener('input', checkRpReady);
-dom.rpKeySecret.addEventListener('input', checkRpReady);
-dom.btnRpFetch.addEventListener('click', fetchRazorpayPayments);
-// Set default date range: last 3 months
-(function setDefaultDates() {
-  const today = new Date();
-  const threeMonthsAgo = new Date(today);
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  dom.rpDateTo.value = today.toISOString().split('T')[0];
-  dom.rpDateFrom.value = threeMonthsAgo.toISOString().split('T')[0];
-})();
 // Freshdesk
 dom.fdApiKey.addEventListener('input', () => { dom.btnFdFetch.disabled = !dom.fdApiKey.value.trim(); });
 dom.btnFdFetch.addEventListener('click', fetchFreshdeskTickets);
@@ -943,7 +759,7 @@ dom.dropZone.addEventListener('dragover', e => { e.preventDefault(); dom.dropZon
 dom.dropZone.addEventListener('dragleave', () => dom.dropZone.classList.remove('drag-over'));
 dom.dropZone.addEventListener('drop', e => { e.preventDefault(); dom.dropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && f.name.endsWith('.csv')) handleFile(f); else showStatus('Drop a .csv file.', 'error'); });
 
-// Ã¢ÂÂÃ¢ÂÂ Startup Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// == Startup ============================================================
 loadPreBuiltTrackerData();
 loadPreBuiltAuthors();
 
@@ -1139,263 +955,596 @@ webhookDom.btnClear.addEventListener('click', () => {
   showWebhookStatus('Log cleared.', 'info');
 });
 
-// ── Callback Form & Tracker ──────────────────────────────────────────────
-state.callbacks = [];
-let cbIdCounter = 1;
 
-const cbDom = {
-  authorName: $id('cb-author-name'),
-  authorEmail: $id('cb-author-email'),
-  phone: $id('cb-phone'),
-  consultant: $id('cb-consultant'),
-  reason: $id('cb-reason'),
-  priority: $id('cb-priority'),
-  date: $id('cb-date'),
-  time: $id('cb-time'),
-  notes: $id('cb-notes'),
-  btnSubmit: $id('btn-cb-submit'),
-  btnClear: $id('btn-cb-clear'),
-  formStatus: $id('cb-form-status'),
-  search: $id('cb-search'),
-  filterStatus: $id('cb-filter-status'),
-  filterConsultant: $id('cb-filter-consultant'),
-  filterPriority: $id('cb-filter-priority'),
-  btnExport: $id('btn-cb-export'),
-  trackerBody: $id('cb-tracker-body'),
-  statTotal: $id('cb-stat-total'),
-  statPending: $id('cb-stat-pending'),
-  statScheduled: $id('cb-stat-scheduled'),
-  statCompleted: $id('cb-stat-completed'),
-  statOverdue: $id('cb-stat-overdue'),
-  statCancelled: $id('cb-stat-cancelled'),
-  consultantBreakdown: $id('cb-consultant-breakdown'),
-  authorList: $id('cb-author-list'),
+
+// ══ Booking System (Calendly-style, single booking per author) ══════════════
+
+// 1. State initialization + localStorage load
+state.bookings = [];
+(function loadBookingsFromStorage() {
+  try {
+    const saved = localStorage.getItem('bookleaf-bookings');
+    if (saved) state.bookings = JSON.parse(saved);
+  } catch (e) {
+    console.warn('Failed to load bookings from localStorage:', e);
+    state.bookings = [];
+  }
+})();
+
+function saveBookings() {
+  try {
+    localStorage.setItem('bookleaf-bookings', JSON.stringify(state.bookings));
+  } catch (e) {
+    console.warn('Failed to save bookings:', e);
+  }
+}
+
+// 2. Booking DOM refs
+const callDom = {
+  overviewStats: $id('call-overview-stats'),
+  search:        $id('call-search'),
+  filterStatus:  $id('call-filter-status'),
+  filterCon:     $id('call-filter-consultant'),
+  btnExport:     $id('btn-call-export'),
+  trackerBody:   $id('call-tracker-body'),
 };
 
-function showCbStatus(m, t) {
-  cbDom.formStatus.textContent = m;
-  cbDom.formStatus.className = `status-msg status-${t}`;
-  cbDom.formStatus.classList.remove('hidden');
-  clearTimeout(showCbStatus._t);
-  showCbStatus._t = setTimeout(() => cbDom.formStatus.classList.add('hidden'), 6000);
-}
-
-// Auto-complete: populate datalist with author names
-function populateAuthorDatalist() {
-  if (!cbDom.authorList) return;
-  cbDom.authorList.innerHTML = state.authors.map(a =>
-    `<option value="${esc(a.name)}" data-email="${esc(a.email)}">`
-  ).join('');
-}
-
-// When author name is typed/selected, auto-fill email, phone, consultant
-cbDom.authorName.addEventListener('input', () => {
-  const name = cbDom.authorName.value.trim();
-  const author = state.authors.find(a => a.name.toLowerCase() === name.toLowerCase());
-  if (author) {
-    cbDom.authorEmail.value = author.email;
-    cbDom.phone.value = author.phone || '';
-    cbDom.consultant.value = author.consultant || '';
-  } else {
-    cbDom.authorEmail.value = '';
-    cbDom.phone.value = '';
-    cbDom.consultant.value = '';
+// 3. Token generation + link generation
+function djb2Hash(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash;
   }
-  checkCbReady();
-});
-
-function checkCbReady() {
-  const nameOk = cbDom.authorName.value.trim();
-  const reasonOk = cbDom.reason.value;
-  cbDom.btnSubmit.disabled = !(nameOk && reasonOk);
+  return Math.abs(hash).toString(36);
 }
-cbDom.reason.addEventListener('change', checkCbReady);
 
-function submitCallback() {
-  const name = cbDom.authorName.value.trim();
-  const author = state.authors.find(a => a.name.toLowerCase() === name.toLowerCase());
-  if (!name) { showCbStatus('Enter author name.', 'error'); return; }
-  if (!cbDom.reason.value) { showCbStatus('Select a reason.', 'error'); return; }
+function generateBookingToken(authorEmail, consultant) {
+  return djb2Hash(authorEmail + '|' + consultant + '|' + ADMIN_PASSWORD);
+}
 
-  const scheduledDate = cbDom.date.value;
-  const scheduledTime = cbDom.time.value;
-  let cbStatus = 'pending';
-  if (scheduledDate) cbStatus = 'scheduled';
+function generateBookingLink(authorEmail, consultant) {
+  const token = generateBookingToken(authorEmail, consultant);
+  const base = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams({
+    book: 'true',
+    author: authorEmail,
+    consultant: consultant,
+    token: token,
+  });
+  return base + '?' + params.toString();
+}
 
-  const cb = {
-    id: cbIdCounter++,
-    authorName: name,
-    authorEmail: author ? author.email : cbDom.authorEmail.value,
-    phone: author ? (author.phone || '') : cbDom.phone.value,
-    consultant: author ? (author.consultant || '') : cbDom.consultant.value,
-    reason: cbDom.reason.value,
-    reasonLabel: cbDom.reason.options[cbDom.reason.selectedIndex].text,
-    priority: cbDom.priority.value,
-    scheduledDate: scheduledDate || null,
-    scheduledTime: scheduledTime || null,
-    notes: cbDom.notes.value.trim(),
-    status: cbStatus,
+function copyBookingLink(authorEmail, consultant) {
+  const link = generateBookingLink(authorEmail, consultant);
+  navigator.clipboard.writeText(link).then(() => {
+    showBookingToast('Booking link copied!');
+  }).catch(() => {
+    const tmp = document.createElement('input');
+    tmp.value = link;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    showBookingToast('Booking link copied!');
+  });
+}
+
+function showBookingToast(msg) {
+  let toast = document.getElementById('booking-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'booking-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#065f46;color:#fff;padding:12px 24px;border-radius:8px;font-size:0.9rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.3s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(showBookingToast._t);
+  showBookingToast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+}
+
+// 4. Booking CRUD
+function createBooking(data) {
+  const booking = {
+    id: 'bk-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+    authorName: data.authorName || '',
+    authorEmail: (data.authorEmail || '').toLowerCase().trim(),
+    authorPhone: data.authorPhone || '',
+    consultant: data.consultant || '',
+    date: data.date || '',
+    timeSlot: data.timeSlot || '',
+    notes: data.notes || '',
+    status: data.status || 'confirmed',
     createdAt: new Date().toISOString(),
     completedAt: null,
   };
-
-  state.callbacks.unshift(cb);
-  showCbStatus(`Callback #${cb.id} created for ${name} → ${cb.consultant || 'Unassigned'}`, 'success');
-  clearCallbackForm();
-  renderCallbackTracker();
+  state.bookings.push(booking);
+  saveBookings();
+  return booking;
 }
 
-function clearCallbackForm() {
-  cbDom.authorName.value = '';
-  cbDom.authorEmail.value = '';
-  cbDom.phone.value = '';
-  cbDom.consultant.value = '';
-  cbDom.reason.value = '';
-  cbDom.priority.value = 'normal';
-  cbDom.date.value = '';
-  cbDom.time.value = '';
-  cbDom.notes.value = '';
-  cbDom.btnSubmit.disabled = true;
+function updateBookingStatus(bookingId, newStatus) {
+  const booking = state.bookings.find(b => b.id === bookingId);
+  if (!booking) return null;
+  booking.status = newStatus;
+  if (newStatus === 'completed') booking.completedAt = new Date().toISOString();
+  saveBookings();
+  refreshUI();
+  return booking;
 }
 
-function updateCallbackStatus(id, newStatus) {
-  const cb = state.callbacks.find(c => c.id === id);
-  if (!cb) return;
-  cb.status = newStatus;
-  if (newStatus === 'completed') cb.completedAt = new Date().toISOString();
-  renderCallbackTracker();
+function getBookingForAuthor(authorEmail) {
+  const email = (authorEmail || '').toLowerCase().trim();
+  const matches = state.bookings
+    .filter(b => b.authorEmail === email && b.status !== 'cancelled')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return matches[0] || null;
 }
 
-function renderCallbackTracker() {
-  // Stats
-  const total = state.callbacks.length;
-  const now = new Date();
-  // Mark overdue: scheduled in the past but not completed/cancelled
-  state.callbacks.forEach(cb => {
-    if (cb.status === 'scheduled' && cb.scheduledDate) {
-      const schedDate = new Date(cb.scheduledDate + (cb.scheduledTime ? 'T' + cb.scheduledTime : 'T23:59:59'));
-      if (schedDate < now) cb.status = 'overdue';
+// 5. renderCallOverview() - simple stats
+function renderCallOverview() {
+  if (!callDom.overviewStats) return;
+  const authors = getViewAuthors();
+  const total = authors.length;
+  const booked = authors.filter(a => {
+    return state.bookings.some(b =>
+      b.authorEmail === a.email.toLowerCase().trim() && b.status !== 'cancelled'
+    );
+  }).length;
+  const completed = authors.filter(a => {
+    return state.bookings.some(b =>
+      b.authorEmail === a.email.toLowerCase().trim() && b.status === 'completed'
+    );
+  }).length;
+  const pending = total - booked;
+
+  callDom.overviewStats.innerHTML = `<div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
+      <div style="font-size:1.8rem;font-weight:700;color:#6366f1;">${total}</div>
+      <div style="font-size:0.8rem;color:#6b7280;">Total Authors</div>
+    </div>
+    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
+      <div style="font-size:1.8rem;font-weight:700;color:#9ca3af;">${pending}</div>
+      <div style="font-size:0.8rem;color:#6b7280;">No Booking</div>
+    </div>
+    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
+      <div style="font-size:1.8rem;font-weight:700;color:#f59e0b;">${booked - completed}</div>
+      <div style="font-size:0.8rem;color:#6b7280;">Scheduled</div>
+    </div>
+    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
+      <div style="font-size:1.8rem;font-weight:700;color:#10b981;">${completed}</div>
+      <div style="font-size:0.8rem;color:#6b7280;">Completed</div>
+    </div>
+  </div>`;
+}
+
+// 6. renderCallTracker() - single booking per author
+function renderCallTracker() {
+  if (!callDom.trackerBody) return;
+
+  const search = (callDom.search ? callDom.search.value : '').toLowerCase();
+  const statusF = callDom.filterStatus ? callDom.filterStatus.value : 'all';
+  const conF = callDom.filterCon ? callDom.filterCon.value : 'all';
+
+  let authors = getViewAuthors();
+
+  if (search) {
+    authors = authors.filter(a =>
+      a.name.toLowerCase().includes(search) ||
+      a.email.toLowerCase().includes(search) ||
+      (a.consultant && a.consultant.toLowerCase().includes(search))
+    );
+  }
+  if (conF !== 'all') {
+    authors = authors.filter(a => a.consultant === conF);
+  }
+  if (statusF !== 'all') {
+    if (statusF === 'pending') {
+      authors = authors.filter(a => !getBookingForAuthor(a.email));
+    } else {
+      authors = authors.filter(a => {
+        const b = getBookingForAuthor(a.email);
+        return b && b.status === statusF;
+      });
     }
-  });
+  }
 
-  const pending = state.callbacks.filter(c => c.status === 'pending').length;
-  const scheduled = state.callbacks.filter(c => c.status === 'scheduled').length;
-  const completed = state.callbacks.filter(c => c.status === 'completed').length;
-  const overdue = state.callbacks.filter(c => c.status === 'overdue').length;
-  const cancelled = state.callbacks.filter(c => c.status === 'cancelled').length;
-
-  cbDom.statTotal.textContent = total;
-  cbDom.statPending.textContent = pending;
-  cbDom.statScheduled.textContent = scheduled;
-  cbDom.statCompleted.textContent = completed;
-  cbDom.statOverdue.textContent = overdue;
-  cbDom.statCancelled.textContent = cancelled;
-
-  // Consultant breakdown
-  const byConsultant = {};
-  state.callbacks.forEach(cb => {
-    const c = cb.consultant || 'Unassigned';
-    if (!byConsultant[c]) byConsultant[c] = { total: 0, pending: 0, completed: 0 };
-    byConsultant[c].total++;
-    if (cb.status === 'pending' || cb.status === 'scheduled' || cb.status === 'overdue') byConsultant[c].pending++;
-    if (cb.status === 'completed') byConsultant[c].completed++;
-  });
-  cbDom.consultantBreakdown.innerHTML = Object.entries(byConsultant).map(([name, data]) =>
-    `<div class="workload-card">
-      <div class="wl-header"><h3>${esc(name)}</h3></div>
-      <div class="workload-stats">
-        <span class="wl-total">${data.total} Total</span>
-        <span class="wl-progress">${data.pending} Active</span>
-        <span class="wl-done">${data.completed} Done</span>
-      </div>
-      <div class="workload-bar"><div class="bar-fill" style="width:${total ? (data.total/total*100) : 0}%"></div></div>
-    </div>`
-  ).join('') || '<p class="muted">No callbacks yet.</p>';
-
-  // Filter
-  const search = (cbDom.search.value || '').toLowerCase();
-  const sf = cbDom.filterStatus.value;
-  const cf = cbDom.filterConsultant.value;
-  const pf = cbDom.filterPriority.value;
-
-  let rows = state.callbacks;
-  if (search) rows = rows.filter(c => c.authorName.toLowerCase().includes(search) || c.authorEmail.toLowerCase().includes(search) || c.consultant.toLowerCase().includes(search));
-  if (sf !== 'all') rows = rows.filter(c => c.status === sf);
-  if (cf !== 'all') rows = rows.filter(c => c.consultant === cf);
-  if (pf !== 'all') rows = rows.filter(c => c.priority === pf);
-
-  if (rows.length === 0) {
-    cbDom.trackerBody.innerHTML = '<tr class="empty-row"><td colspan="10">No callback requests match filters.</td></tr>';
+  if (authors.length === 0) {
+    callDom.trackerBody.innerHTML = '<tr class="empty-row"><td colspan="7">No records found.</td></tr>';
     return;
   }
 
-  cbDom.trackerBody.innerHTML = rows.map((cb, idx) => {
-    const priClass = `priority-${cb.priority}`;
-    const stClass = `cb-status-${cb.status}`;
-    const scheduled = cb.scheduledDate ? `${cb.scheduledDate}${cb.scheduledTime ? ' ' + cb.scheduledTime : ''}` : '–';
+  callDom.trackerBody.innerHTML = authors.map(a => {
+    const booking = getBookingForAuthor(a.email);
 
-    let actions = '';
-    if (cb.status === 'pending') {
-      actions = `<div class="cb-action-row">
-        <button class="btn btn-sm btn-primary" onclick="updateCallbackStatus(${cb.id},'scheduled')">Schedule</button>
-        <button class="btn btn-sm btn-danger" onclick="updateCallbackStatus(${cb.id},'cancelled')">Cancel</button>
-      </div>`;
-    } else if (cb.status === 'scheduled' || cb.status === 'overdue') {
-      actions = `<div class="cb-action-row">
-        <button class="btn btn-sm btn-accent" onclick="updateCallbackStatus(${cb.id},'completed')">Done</button>
-        <button class="btn btn-sm btn-danger" onclick="updateCallbackStatus(${cb.id},'cancelled')">Cancel</button>
-      </div>`;
+    // Booking column
+    let bookingCell;
+    if (!booking) {
+      bookingCell = `<td class="td-center">
+        <button class="btn btn-sm btn-secondary" onclick="copyBookingLink('${esc(a.email)}','${esc(a.consultant)}')" title="Copy booking link for this author">
+          Copy Link
+        </button>
+      </td>`;
     } else {
-      actions = `<span class="muted">${cb.status === 'completed' ? 'Completed' : 'Cancelled'}</span>`;
+      bookingCell = `<td class="td-center"><span style="color:#6366f1;font-weight:500;">Booked</span></td>`;
+    }
+
+    // Date & Time
+    let dateCell;
+    if (booking && booking.date) {
+      const dObj = new Date(booking.date + 'T12:00:00');
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      dateCell = `<td class="td-center">${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]}<br><span style="font-size:0.8rem;color:#6b7280;">${esc(booking.timeSlot || '')}</span></td>`;
+    } else {
+      dateCell = `<td class="td-center muted">&ndash;</td>`;
+    }
+
+    // Status badge
+    let statusCell;
+    if (!booking) {
+      statusCell = `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:#f3f4f6;color:#6b7280;">No Booking</span></td>`;
+    } else {
+      let bg, color;
+      switch (booking.status) {
+        case 'confirmed': bg = '#fef3c7'; color = '#92400e'; break;
+        case 'completed': bg = '#d1fae5'; color = '#065f46'; break;
+        case 'cancelled': bg = '#fee2e2'; color = '#991b1b'; break;
+        default: bg = '#e0e7ff'; color = '#3730a3';
+      }
+      const label = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
+      statusCell = `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:${bg};color:${color};">${label}</span></td>`;
+    }
+
+    // Actions
+    let actionsCell;
+    if (!booking) {
+      actionsCell = `<td class="td-center muted">&ndash;</td>`;
+    } else if (booking.status === 'confirmed') {
+      actionsCell = `<td class="td-center">
+        <button class="btn btn-sm" style="background:#10b981;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','completed')">Done</button>
+        <button class="btn btn-sm" style="background:#ef4444;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','cancelled')">Cancel</button>
+      </td>`;
+    } else if (booking.status === 'completed') {
+      actionsCell = `<td class="td-center"><span style="color:#10b981;">&#10003;</span></td>`;
+    } else {
+      actionsCell = `<td class="td-center muted">&ndash;</td>`;
     }
 
     return `<tr>
-      <td class="muted">${cb.id}</td>
-      <td class="td-name">${esc(cb.authorName)}</td>
-      <td class="muted">${esc(cb.phone || '–')}</td>
-      <td>${esc(cb.consultant || '–')}</td>
-      <td>${esc(cb.reasonLabel)}</td>
-      <td><span class="badge ${priClass}">${cb.priority.charAt(0).toUpperCase() + cb.priority.slice(1)}</span></td>
-      <td class="muted">${scheduled}</td>
-      <td><span class="badge ${stClass}">${cb.status.charAt(0).toUpperCase() + cb.status.slice(1)}</span></td>
-      <td class="td-subject">${esc(cb.notes || '–')}</td>
-      <td>${actions}</td>
+      <td class="td-name">${esc(a.name)}</td>
+      <td class="td-email">${esc(a.email)}</td>
+      <td>${esc(a.consultant || '')}</td>
+      ${bookingCell}${dateCell}${statusCell}${actionsCell}
     </tr>`;
   }).join('');
 }
 
-function exportCallbacks() {
-  if (state.callbacks.length === 0) return;
-  const rows = [['#','Author','Email','Phone','Consultant','Reason','Priority','Scheduled Date','Scheduled Time','Status','Notes','Created']];
-  state.callbacks.forEach(cb => {
-    rows.push([cb.id, cb.authorName, cb.authorEmail, cb.phone, cb.consultant, cb.reasonLabel, cb.priority, cb.scheduledDate||'', cb.scheduledTime||'', cb.status, cb.notes, cb.createdAt]);
+// 7. exportCallData()
+function exportCallData() {
+  const headers = ['Author', 'Email', 'Phone', 'Consultant', 'Date', 'Time Slot', 'Status', 'Notes', 'Created At', 'Completed At'];
+  const rows = [headers];
+
+  state.bookings.forEach(b => {
+    rows.push([
+      b.authorName, b.authorEmail, b.authorPhone, b.consultant,
+      b.date, b.timeSlot, b.status, b.notes, b.createdAt, b.completedAt || '',
+    ]);
   });
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+
+  // Add authors without bookings
+  const bookedEmails = new Set(state.bookings.map(b => b.authorEmail));
+  getViewAuthors().forEach(a => {
+    if (!bookedEmails.has(a.email.toLowerCase().trim())) {
+      rows.push([a.name, a.email, a.phone, a.consultant, '', '', 'pending', '', '', '']);
+    }
+  });
+
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a'); link.href = url; link.download = `callbacks_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bookings_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
   URL.revokeObjectURL(url);
 }
 
-// Callback events
-cbDom.btnSubmit.addEventListener('click', submitCallback);
-cbDom.btnClear.addEventListener('click', clearCallbackForm);
-cbDom.search.addEventListener('input', renderCallbackTracker);
-cbDom.filterStatus.addEventListener('change', renderCallbackTracker);
-cbDom.filterConsultant.addEventListener('change', renderCallbackTracker);
-cbDom.filterPriority.addEventListener('change', renderCallbackTracker);
-cbDom.btnExport.addEventListener('click', exportCallbacks);
+// 8. initAuthorBookingView() - Calendly-like author form
+function initAuthorBookingView(params) {
+  const authorEmail = (params.get('author') || '').toLowerCase().trim();
+  const consultant = params.get('consultant') || '';
+  const token = params.get('token') || '';
 
-// Set default callback date to today
-cbDom.date.value = new Date().toISOString().split('T')[0];
+  // Validate token
+  const expectedToken = generateBookingToken(authorEmail, consultant);
+  if (token !== expectedToken) {
+    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui;">
+      <div style="text-align:center;padding:40px;max-width:480px;">
+        <div style="font-size:3rem;margin-bottom:16px;">&#9888;</div>
+        <h2 style="color:#991b1b;margin-bottom:8px;">Invalid Booking Link</h2>
+        <p style="color:#6b7280;">This booking link is invalid or has expired. Please contact your consultant for a new link.</p>
+      </div>
+    </div>`;
+    return;
+  }
 
-// Populate author datalist on initial load and after data changes
+  const author = state.authors.find(a => a.email.toLowerCase().trim() === authorEmail);
+  const authorName = author ? author.name : authorEmail.split('@')[0];
+  const consultantObj = CONSULTANTS.find(c => c.name === consultant);
+  const consultantFullName = consultantObj ? consultantObj.fullName : consultant;
+
+  // Check if already booked
+  const existingBooking = getBookingForAuthor(authorEmail);
+
+  // Hide admin UI
+  document.querySelectorAll('header, footer, main > *:not(#author-callback-view)').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  const acbView = $id('author-callback-view');
+  if (acbView) {
+    acbView.classList.remove('hidden');
+    acbView.style.display = '';
+  }
+
+  const acbSubtitle = $id('acb-subtitle');
+  const acbGreeting = $id('acb-greeting');
+  const acbDesc = $id('acb-description');
+  if (acbSubtitle) acbSubtitle.textContent = 'Bookleaf Publishing';
+  if (acbGreeting) acbGreeting.textContent = `Hello ${authorName}!`;
+  if (acbDesc) acbDesc.textContent = `${consultantFullName} has invited you to book a call. Please pick a date and time that works best for you (10 AM \u2013 6 PM).`;
+
+  if (existingBooking && existingBooking.status === 'confirmed') {
+    showBookingThankYou(existingBooking, consultantObj);
+    return;
+  }
+
+  const formDiv = $id('acb-form');
+  if (!formDiv) return;
+
+  // Generate next 7 weekdays (skip Sundays)
+  const dates = [];
+  const today = new Date();
+  let cursor = new Date(today);
+  cursor.setDate(cursor.getDate() + 1);
+  while (dates.length < 7) {
+    if (cursor.getDay() !== 0) dates.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  // Time slots: 10:00 AM to 6:00 PM in 30-min intervals
+  const timeSlots = [];
+  for (let h = 10; h < 18; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const hour12 = h > 12 ? h - 12 : h;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const label = `${hour12}:${m === 0 ? '00' : m} ${ampm}`;
+      const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      timeSlots.push({ label, value });
+    }
+  }
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  formDiv.innerHTML = `
+    <div style="max-width:560px;margin:0 auto;">
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Your Name</label>
+        <input type="text" id="bk-name" value="${esc(authorName)}" readonly
+          style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;font-size:0.95rem;color:#6b7280;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Email</label>
+        <input type="email" id="bk-email" value="${esc(authorEmail)}" readonly
+          style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;font-size:0.95rem;color:#6b7280;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Phone</label>
+        <input type="tel" id="bk-phone" value="${esc(author ? author.phone : '')}" placeholder="Your phone number"
+          style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Select a Date</label>
+      </div>
+      <div id="bk-date-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+        ${dates.map((d, i) => {
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          return `<button type="button" class="bk-date-btn" data-date="${dateStr}" data-index="${i}"
+            style="flex:1;min-width:70px;padding:12px 8px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;text-align:center;transition:all 0.15s;"
+            onmouseover="this.style.borderColor='#818cf8'" onmouseout="if(!this.classList.contains('bk-selected'))this.style.borderColor='#e5e7eb'">
+            <div style="font-size:0.78rem;color:#6b7280;font-weight:500;">${dayNames[d.getDay()]}</div>
+            <div style="font-size:1.3rem;font-weight:700;color:#1f2937;">${d.getDate()}</div>
+            <div style="font-size:0.72rem;color:#9ca3af;">${monthNames[d.getMonth()]}</div>
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div id="bk-time-section" style="display:none;margin-bottom:24px;">
+        <label style="display:block;font-weight:600;margin-bottom:8px;color:#374151;">Select a Time</label>
+        <div id="bk-time-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          ${timeSlots.map(t => {
+            return `<button type="button" class="bk-time-btn" data-time="${t.value}" data-label="${t.label}"
+              style="padding:10px 4px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:0.85rem;color:#374151;font-weight:500;transition:all 0.15s;"
+              onmouseover="this.style.borderColor='#818cf8'" onmouseout="if(!this.classList.contains('bk-selected'))this.style.borderColor='#e5e7eb'">
+              ${t.label}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Notes (optional)</label>
+        <textarea id="bk-notes" rows="3" placeholder="Any specific topics you'd like to discuss..."
+          style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.95rem;resize:vertical;font-family:inherit;box-sizing:border-box;"></textarea>
+      </div>
+
+      <div id="bk-selection-summary" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+        <span style="font-weight:600;color:#166534;">Selected:</span>
+        <span id="bk-summary-text" style="color:#166534;"></span>
+      </div>
+
+      <button type="button" id="bk-submit-btn" disabled
+        style="width:100%;padding:14px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;opacity:0.5;transition:all 0.2s;"
+        onmouseover="if(!this.disabled)this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+        Confirm Booking
+      </button>
+    </div>
+  `;
+
+  let selectedDate = null;
+  let selectedTime = null;
+  let selectedTimeLabel = null;
+
+  function updateSubmitState() {
+    const btn = $id('bk-submit-btn');
+    const summary = $id('bk-selection-summary');
+    const summaryText = $id('bk-summary-text');
+    if (selectedDate && selectedTime) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      summary.style.display = '';
+      const dObj = new Date(selectedDate + 'T12:00:00');
+      summaryText.textContent = `${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]} ${dObj.getFullYear()} at ${selectedTimeLabel}`;
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      summary.style.display = 'none';
+    }
+  }
+
+  $id('bk-date-grid').addEventListener('click', function(e) {
+    const btn = e.target.closest('.bk-date-btn');
+    if (!btn) return;
+    this.querySelectorAll('.bk-date-btn').forEach(b => {
+      b.classList.remove('bk-selected');
+      b.style.borderColor = '#e5e7eb';
+      b.style.background = '#fff';
+    });
+    btn.classList.add('bk-selected');
+    btn.style.borderColor = '#6366f1';
+    btn.style.background = '#eef2ff';
+    selectedDate = btn.dataset.date;
+    $id('bk-time-section').style.display = '';
+    selectedTime = null;
+    selectedTimeLabel = null;
+    $id('bk-time-grid').querySelectorAll('.bk-time-btn').forEach(b => {
+      b.classList.remove('bk-selected');
+      b.style.borderColor = '#e5e7eb';
+      b.style.background = '#fff';
+      b.style.color = '#374151';
+    });
+    updateSubmitState();
+  });
+
+  $id('bk-time-grid').addEventListener('click', function(e) {
+    const btn = e.target.closest('.bk-time-btn');
+    if (!btn) return;
+    this.querySelectorAll('.bk-time-btn').forEach(b => {
+      b.classList.remove('bk-selected');
+      b.style.borderColor = '#e5e7eb';
+      b.style.background = '#fff';
+      b.style.color = '#374151';
+    });
+    btn.classList.add('bk-selected');
+    btn.style.borderColor = '#6366f1';
+    btn.style.background = '#6366f1';
+    btn.style.color = '#fff';
+    selectedTime = btn.dataset.time;
+    selectedTimeLabel = btn.dataset.label;
+    updateSubmitState();
+  });
+
+  $id('bk-submit-btn').addEventListener('click', function() {
+    if (!selectedDate || !selectedTime) return;
+    const phone = ($id('bk-phone') ? $id('bk-phone').value : '').trim();
+    const notes = ($id('bk-notes') ? $id('bk-notes').value : '').trim();
+    const booking = createBooking({
+      authorName: authorName,
+      authorEmail: authorEmail,
+      authorPhone: phone,
+      consultant: consultant,
+      date: selectedDate,
+      timeSlot: selectedTimeLabel,
+      notes: notes,
+      status: 'confirmed',
+    });
+    if (author && phone) author.phone = phone;
+    showBookingThankYou(booking, consultantObj);
+  });
+}
+
+function showBookingThankYou(booking, consultantObj) {
+  const formDiv = $id('acb-form');
+  const thankYou = $id('acb-thankyou');
+  const responseSummary = $id('acb-response-summary');
+
+  if (formDiv) formDiv.style.display = 'none';
+  if (thankYou) {
+    thankYou.classList.remove('hidden');
+    thankYou.style.display = '';
+  }
+
+  const dObj = booking.date ? new Date(booking.date + 'T12:00:00') : null;
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dateFormatted = dObj
+    ? `${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]} ${dObj.getFullYear()}`
+    : 'N/A';
+
+  const consultantEmail = consultantObj ? consultantObj.email : '';
+  const mailSubject = encodeURIComponent(`Booking Confirmation - ${booking.authorName}`);
+  const mailBody = encodeURIComponent(`Hi ${consultantObj ? consultantObj.fullName : booking.consultant},\n\nI have booked a call for ${dateFormatted} at ${booking.timeSlot}.\n\nPlease confirm.\n\nThank you,\n${booking.authorName}`);
+  const mailtoLink = consultantEmail ? `mailto:${consultantEmail}?subject=${mailSubject}&body=${mailBody}` : '';
+
+  if (responseSummary) {
+    responseSummary.innerHTML = `
+      <div style="max-width:480px;margin:0 auto;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:12px;">&#9989;</div>
+        <h2 style="color:#065f46;margin-bottom:8px;">Booking Confirmed!</h2>
+        <p style="color:#6b7280;margin-bottom:24px;">Your call has been scheduled.</p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;text-align:left;margin-bottom:24px;">
+          <div style="margin-bottom:12px;"><strong style="color:#374151;">Date:</strong> <span style="color:#065f46;">${esc(dateFormatted)}</span></div>
+          <div style="margin-bottom:12px;"><strong style="color:#374151;">Time:</strong> <span style="color:#065f46;">${esc(booking.timeSlot || 'N/A')}</span></div>
+          <div style="margin-bottom:12px;"><strong style="color:#374151;">Consultant:</strong> <span style="color:#065f46;">${esc(consultantObj ? consultantObj.fullName : booking.consultant)}</span></div>
+          ${booking.notes ? `<div><strong style="color:#374151;">Notes:</strong> <span style="color:#6b7280;">${esc(booking.notes)}</span></div>` : ''}
+        </div>
+        ${mailtoLink ? `<a href="${mailtoLink}" style="display:inline-block;padding:12px 28px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:0.95rem;">
+          Send Confirmation Email
+        </a>` : ''}
+        <p style="color:#9ca3af;font-size:0.82rem;margin-top:16px;">You can close this page. Your consultant will reach out to confirm.</p>
+      </div>
+    `;
+  }
+}
+
+// 9. Event listeners
+(function attachCallTrackerListeners() {
+  if (callDom.search) callDom.search.addEventListener('input', renderCallTracker);
+  if (callDom.filterStatus) callDom.filterStatus.addEventListener('change', renderCallTracker);
+  if (callDom.filterCon) callDom.filterCon.addEventListener('change', renderCallTracker);
+  if (callDom.btnExport) callDom.btnExport.addEventListener('click', exportCallData);
+})();
+
+// 10. URL detection for ?book=true
+(function checkBookingMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('book') === 'true') {
+    initAuthorBookingView(params);
+  }
+})();
+
+// 11. refreshUI override
 const _origRefreshUI = refreshUI;
 refreshUI = function() {
   _origRefreshUI();
-  populateAuthorDatalist();
+  renderCallOverview();
+  renderCallTracker();
 };
 
-// Initial render
-populateAuthorDatalist();
-renderCallbackTracker();
+// 12. Initial render
+renderCallOverview();
+renderCallTracker();
