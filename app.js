@@ -17,7 +17,7 @@ const PACKAGES = {
 const FD_DOMAIN = 'bookleafpublishing.freshdesk.com';
 const FD_STATUS = { 2: 'Open', 3: 'Pending', 4: 'Resolved', 5: 'Closed' };
 
-// Detect environment: localhost uses proxy, GitHub Pages calls Freshdesk/Razorpay directly
+// Detect environment: localhost uses proxy, GitHub Pages calls Freshdesk directly
 const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 // Workflow stages (matching Google Sheet columns exactly)
@@ -91,9 +91,9 @@ async function loadFreshdeskAgents() {
   try {
     const res = await fetch(fdUrl('agents?per_page=100'), { headers: fdHeaders() });
     if (!res.ok) {
-      console.warn(`Freshdesk agents API: ${res.status} â skipping agent matching`);
+      console.warn(`Freshdesk agents API: ${res.status} -- skipping agent matching`);
       state.fdAgentsLoaded = true;
-      return '(agents API unavailable â ticket sync will still work)';
+      return '(agents API unavailable -- ticket sync will still work)';
     }
     const agents = await res.json();
     CONSULTANTS.forEach(c => {
@@ -467,6 +467,15 @@ function switchView(view) {
     dom.filterStatus.innerHTML = '<option value="all">All Statuses</option><option value="assigned">Assigned</option><option value="in-progress">In Progress</option><option value="good-to-go">Good to Go</option><option value="completed">Completed</option>';
   }
 
+  // Update booking filter: admin sees only confirmed/completed by default; consultant sees all
+  if (callDom.filterStatus) {
+    if (isAdmin) {
+      callDom.filterStatus.innerHTML = '<option value="all">Confirmed & Completed</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option>';
+    } else {
+      callDom.filterStatus.innerHTML = '<option value="all">All Statuses</option><option value="pending">No Booking</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>';
+    }
+  }
+
   refreshUI();
 }
 
@@ -728,8 +737,16 @@ dom.searchInput.addEventListener('input', renderTable);
 dom.filterPackage.addEventListener('change', renderTable);
 dom.filterConsultant.addEventListener('change', renderTable);
 dom.filterStatus.addEventListener('change', renderTable);
-// Freshdesk
-dom.fdApiKey.addEventListener('input', () => { dom.btnFdFetch.disabled = !dom.fdApiKey.value.trim(); });
+// Freshdesk -- persist API key in localStorage
+dom.fdApiKey.addEventListener('input', () => {
+  const key = dom.fdApiKey.value.trim();
+  dom.btnFdFetch.disabled = !key;
+  if (key) {
+    try { localStorage.setItem('bookleaf-fd-key', key); } catch {}
+  } else {
+    try { localStorage.removeItem('bookleaf-fd-key'); } catch {}
+  }
+});
 dom.btnFdFetch.addEventListener('click', fetchFreshdeskTickets);
 dom.btnFdAutoAssign.addEventListener('click', autoAssignFreshdeskTickets);
 dom.ticketSearch.addEventListener('input', renderTickets);
@@ -760,6 +777,18 @@ dom.dropZone.addEventListener('dragleave', () => dom.dropZone.classList.remove('
 dom.dropZone.addEventListener('drop', e => { e.preventDefault(); dom.dropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && f.name.endsWith('.csv')) handleFile(f); else showStatus('Drop a .csv file.', 'error'); });
 
 // == Startup ============================================================
+
+// Restore saved Freshdesk API key
+(function restoreFdKey() {
+  try {
+    const savedKey = localStorage.getItem('bookleaf-fd-key');
+    if (savedKey) {
+      dom.fdApiKey.value = savedKey;
+      dom.btnFdFetch.disabled = false;
+    }
+  } catch {}
+})();
+
 loadPreBuiltTrackerData();
 loadPreBuiltAuthors();
 
@@ -768,7 +797,7 @@ if (!IS_LOCAL) {
   const hint = document.createElement('div');
   hint.className = 'status-msg status-info';
   hint.style.cssText = 'margin:0;border-radius:0 0 6px 6px;font-size:0.82rem;padding:6px 12px;';
-  hint.textContent = '\u2139\uFE0F Freshdesk & Razorpay API integration requires the local proxy (python3 server.py \u2192 localhost:8080). Author data and workflows work here.';
+  hint.textContent = '\u2139\uFE0F Freshdesk API integration requires the local proxy (python3 server.py \u2192 localhost:8080). Author data, workflows, and webhook processing work here.';
   const fdPanel = document.getElementById('freshdesk-panel');
   if (fdPanel) fdPanel.querySelector('.config-form').prepend(hint);
 }
@@ -1085,6 +1114,7 @@ function getBookingForAuthor(authorEmail) {
 // 5. renderCallOverview() - simple stats
 function renderCallOverview() {
   if (!callDom.overviewStats) return;
+  const isAdmin = state.currentView === 'admin';
   const authors = getViewAuthors();
   const total = authors.length;
   const booked = authors.filter(a => {
@@ -1099,29 +1129,37 @@ function renderCallOverview() {
   }).length;
   const pending = total - booked;
 
+  // Update section title and description based on view
+  const titleEl = document.getElementById('booking-section-title');
+  const descEl = document.getElementById('booking-section-desc');
+  if (isAdmin) {
+    if (titleEl) titleEl.textContent = 'Booking Tracker';
+    if (descEl) descEl.textContent = 'Overview of all confirmed author bookings.';
+  } else {
+    if (titleEl) titleEl.textContent = 'My Author Bookings';
+    if (descEl) descEl.textContent = 'Generate a booking link for each author. Authors pick a slot (10 AM -- 6 PM, Mon--Sat) and confirm.';
+  }
+
+  // Hide consultant filter in team view
+  if (callDom.filterCon) callDom.filterCon.style.display = isAdmin ? '' : 'none';
+
+  const statCard = (val, label, color) => `<div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
+    <div style="font-size:1.8rem;font-weight:700;color:${color};">${val}</div>
+    <div style="font-size:0.8rem;color:#6b7280;">${label}</div>
+  </div>`;
+
   callDom.overviewStats.innerHTML = `<div style="display:flex;gap:16px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
-      <div style="font-size:1.8rem;font-weight:700;color:#6366f1;">${total}</div>
-      <div style="font-size:0.8rem;color:#6b7280;">Total Authors</div>
-    </div>
-    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
-      <div style="font-size:1.8rem;font-weight:700;color:#9ca3af;">${pending}</div>
-      <div style="font-size:0.8rem;color:#6b7280;">No Booking</div>
-    </div>
-    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
-      <div style="font-size:1.8rem;font-weight:700;color:#f59e0b;">${booked - completed}</div>
-      <div style="font-size:0.8rem;color:#6b7280;">Scheduled</div>
-    </div>
-    <div style="flex:1;min-width:140px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;text-align:center;">
-      <div style="font-size:1.8rem;font-weight:700;color:#10b981;">${completed}</div>
-      <div style="font-size:0.8rem;color:#6b7280;">Completed</div>
-    </div>
+    ${statCard(total, 'Total Authors', '#6366f1')}
+    ${statCard(pending, 'No Booking', '#9ca3af')}
+    ${statCard(booked - completed, 'Scheduled', '#f59e0b')}
+    ${statCard(completed, 'Completed', '#10b981')}
   </div>`;
 }
 
-// 6. renderCallTracker() - single booking per author
+// 6. renderCallTracker() - role-based: admin=read-only, consultant=copy link + actions
 function renderCallTracker() {
   if (!callDom.trackerBody) return;
+  const isAdmin = state.currentView === 'admin';
 
   const search = (callDom.search ? callDom.search.value : '').toLowerCase();
   const statusF = callDom.filterStatus ? callDom.filterStatus.value : 'all';
@@ -1139,7 +1177,15 @@ function renderCallTracker() {
   if (conF !== 'all') {
     authors = authors.filter(a => a.consultant === conF);
   }
-  if (statusF !== 'all') {
+
+  // Admin view: default to showing only booked authors (confirmed/completed)
+  // Consultant view: show all their authors
+  if (isAdmin && statusF === 'all') {
+    authors = authors.filter(a => {
+      const b = getBookingForAuthor(a.email);
+      return b && (b.status === 'confirmed' || b.status === 'completed');
+    });
+  } else if (statusF !== 'all') {
     if (statusF === 'pending') {
       authors = authors.filter(a => !getBookingForAuthor(a.email));
     } else {
@@ -1150,75 +1196,102 @@ function renderCallTracker() {
     }
   }
 
-  if (authors.length === 0) {
-    callDom.trackerBody.innerHTML = '<tr class="empty-row"><td colspan="7">No records found.</td></tr>';
-    return;
-  }
-
-  callDom.trackerBody.innerHTML = authors.map(a => {
-    const booking = getBookingForAuthor(a.email);
-
-    // Booking column
-    let bookingCell;
-    if (!booking) {
-      bookingCell = `<td class="td-center">
-        <button class="btn btn-sm btn-secondary" onclick="copyBookingLink('${esc(a.email)}','${esc(a.consultant)}')" title="Copy booking link for this author">
-          Copy Link
-        </button>
-      </td>`;
-    } else {
-      bookingCell = `<td class="td-center"><span style="color:#6366f1;font-weight:500;">Booked</span></td>`;
+  // Update table header based on view
+  const thead = document.getElementById('call-tracker-head');
+  if (isAdmin) {
+    // Admin: read-only view — Author | Email | Consultant | Date & Time | Status
+    if (thead) thead.innerHTML = '<th>Author</th><th>Email</th><th>Consultant</th><th>Date &amp; Time</th><th>Status</th>';
+    const cols = 5;
+    if (authors.length === 0) {
+      callDom.trackerBody.innerHTML = `<tr class="empty-row"><td colspan="${cols}">No confirmed bookings yet.</td></tr>`;
+      return;
     }
-
-    // Date & Time
-    let dateCell;
-    if (booking && booking.date) {
-      const dObj = new Date(booking.date + 'T12:00:00');
-      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      dateCell = `<td class="td-center">${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]}<br><span style="font-size:0.8rem;color:#6b7280;">${esc(booking.timeSlot || '')}</span></td>`;
-    } else {
-      dateCell = `<td class="td-center muted">&ndash;</td>`;
+    callDom.trackerBody.innerHTML = authors.map(a => {
+      const booking = getBookingForAuthor(a.email);
+      const dateCell = formatBookingDate(booking);
+      const statusCell = formatBookingStatus(booking);
+      return `<tr>
+        <td class="td-name">${esc(a.name)}</td>
+        <td class="td-email">${esc(a.email)}</td>
+        <td>${esc(a.consultant || '')}</td>
+        ${dateCell}${statusCell}
+      </tr>`;
+    }).join('');
+  } else {
+    // Consultant: full control — Author | Email | Booking | Date & Time | Status | Actions
+    if (thead) thead.innerHTML = '<th>Author</th><th>Email</th><th>Booking</th><th>Date &amp; Time</th><th>Status</th><th>Actions</th>';
+    const cols = 6;
+    if (authors.length === 0) {
+      callDom.trackerBody.innerHTML = `<tr class="empty-row"><td colspan="${cols}">No authors assigned to you.</td></tr>`;
+      return;
     }
+    callDom.trackerBody.innerHTML = authors.map(a => {
+      const booking = getBookingForAuthor(a.email);
 
-    // Status badge
-    let statusCell;
-    if (!booking) {
-      statusCell = `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:#f3f4f6;color:#6b7280;">No Booking</span></td>`;
-    } else {
-      let bg, color;
-      switch (booking.status) {
-        case 'confirmed': bg = '#fef3c7'; color = '#92400e'; break;
-        case 'completed': bg = '#d1fae5'; color = '#065f46'; break;
-        case 'cancelled': bg = '#fee2e2'; color = '#991b1b'; break;
-        default: bg = '#e0e7ff'; color = '#3730a3';
+      // Booking column: Copy Link or "Booked"
+      let bookingCell;
+      if (!booking) {
+        bookingCell = `<td class="td-center">
+          <button class="btn btn-sm btn-secondary" onclick="copyBookingLink('${esc(a.email)}','${esc(a.consultant)}')" title="Copy booking link for this author">
+            Copy Link
+          </button>
+        </td>`;
+      } else {
+        bookingCell = `<td class="td-center"><span style="color:#6366f1;font-weight:500;">Booked</span></td>`;
       }
-      const label = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
-      statusCell = `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:${bg};color:${color};">${label}</span></td>`;
-    }
 
-    // Actions
-    let actionsCell;
-    if (!booking) {
-      actionsCell = `<td class="td-center muted">&ndash;</td>`;
-    } else if (booking.status === 'confirmed') {
-      actionsCell = `<td class="td-center">
-        <button class="btn btn-sm" style="background:#10b981;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','completed')">Done</button>
-        <button class="btn btn-sm" style="background:#ef4444;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','cancelled')">Cancel</button>
-      </td>`;
-    } else if (booking.status === 'completed') {
-      actionsCell = `<td class="td-center"><span style="color:#10b981;">&#10003;</span></td>`;
-    } else {
-      actionsCell = `<td class="td-center muted">&ndash;</td>`;
-    }
+      const dateCell = formatBookingDate(booking);
+      const statusCell = formatBookingStatus(booking);
 
-    return `<tr>
-      <td class="td-name">${esc(a.name)}</td>
-      <td class="td-email">${esc(a.email)}</td>
-      <td>${esc(a.consultant || '')}</td>
-      ${bookingCell}${dateCell}${statusCell}${actionsCell}
-    </tr>`;
-  }).join('');
+      // Actions: Done/Cancel for confirmed bookings
+      let actionsCell;
+      if (!booking) {
+        actionsCell = `<td class="td-center muted">&ndash;</td>`;
+      } else if (booking.status === 'confirmed') {
+        actionsCell = `<td class="td-center">
+          <button class="btn btn-sm" style="background:#10b981;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','completed')">Done</button>
+          <button class="btn btn-sm" style="background:#ef4444;color:#fff;font-size:0.72rem;padding:3px 8px;" onclick="updateBookingStatus('${booking.id}','cancelled')">Cancel</button>
+        </td>`;
+      } else if (booking.status === 'completed') {
+        actionsCell = `<td class="td-center"><span style="color:#10b981;">&#10003;</span></td>`;
+      } else {
+        actionsCell = `<td class="td-center muted">&ndash;</td>`;
+      }
+
+      return `<tr>
+        <td class="td-name">${esc(a.name)}</td>
+        <td class="td-email">${esc(a.email)}</td>
+        ${bookingCell}${dateCell}${statusCell}${actionsCell}
+      </tr>`;
+    }).join('');
+  }
+}
+
+// Helper: format booking date cell
+function formatBookingDate(booking) {
+  if (booking && booking.date) {
+    const dObj = new Date(booking.date + 'T12:00:00');
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `<td class="td-center">${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]}<br><span style="font-size:0.8rem;color:#6b7280;">${esc(booking.timeSlot || '')}</span></td>`;
+  }
+  return `<td class="td-center muted">&ndash;</td>`;
+}
+
+// Helper: format booking status badge
+function formatBookingStatus(booking) {
+  if (!booking) {
+    return `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:#f3f4f6;color:#6b7280;">No Booking</span></td>`;
+  }
+  let bg, color;
+  switch (booking.status) {
+    case 'confirmed': bg = '#fef3c7'; color = '#92400e'; break;
+    case 'completed': bg = '#d1fae5'; color = '#065f46'; break;
+    case 'cancelled': bg = '#fee2e2'; color = '#991b1b'; break;
+    default: bg = '#e0e7ff'; color = '#3730a3';
+  }
+  const label = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
+  return `<td class="td-center"><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.78rem;font-weight:500;background:${bg};color:${color};">${label}</span></td>`;
 }
 
 // 7. exportCallData()

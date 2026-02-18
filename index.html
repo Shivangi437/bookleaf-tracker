@@ -234,106 +234,59 @@
       </div>
     </details>
 
-    <!-- Consultant Booking Links & Tracking -->
-    <details class="admin-section" id="callback-section">
-      <summary class="admin-toggle">Consultant Booking Links</summary>
-      <div class="callback-content">
-        <!-- Booking Overview -->
-        <section class="card">
-          <h2>Booking Overview</h2>
-          <p class="info-text" style="margin:-8px 0 12px">Generate a shareable booking link for each author. Authors can pick a slot (10 AM – 6 PM, Mon–Sat) and confirm. Track all bookings below.</p>
-          <div class="call-overview-stats" id="call-overview-stats"></div>
-        </section>
-
-        <!-- Author Booking Tracker Table -->
-        <section class="card" style="margin-top:0">
-          <h2>Author Booking Tracker</h2>
-          <div class="table-controls">
-            <input type="text" id="call-search" placeholder="Search authors..." class="search-input">
-            <select id="call-filter-status" class="filter-select">
-              <option value="all">All Statuses</option>
-              <option value="pending">No Booking</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <select id="call-filter-consultant" class="filter-select">
-              <option value="all">All Consultants</option>
-              <option value="Vandana">Vandana</option>
-              <option value="Sapna">Sapna</option>
-              <option value="Tannu">Tannu</option>
-              <option value="Roosha">Roosha</option>
-            </select>
-            <button id="btn-call-export" class="btn btn-secondary btn-sm">Export Bookings</button>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Author</th>
-                  <th>Email</th>
-                  <th>Consultant</th>
-                  <th>Booking</th>
-                  <th>Date &amp; Time</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="call-tracker-body">
-                <tr class="empty-row"><td colspan="7">No author data loaded.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+    <!-- Booking Section (visible to both admin and consultants) -->
+    <section id="booking-section" class="card">
+      <h2 id="booking-section-title">Booking Tracker</h2>
+      <p class="info-text" id="booking-section-desc" style="margin:-8px 0 12px">Track all confirmed bookings below.</p>
+      <div class="call-overview-stats" id="call-overview-stats"></div>
+      <div class="table-controls" style="margin-top:12px">
+        <input type="text" id="call-search" placeholder="Search authors..." class="search-input">
+        <select id="call-filter-status" class="filter-select">
+          <option value="all">All Statuses</option>
+          <option value="pending">No Booking</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select id="call-filter-consultant" class="filter-select">
+          <option value="all">All Consultants</option>
+          <option value="Vandana">Vandana</option>
+          <option value="Sapna">Sapna</option>
+          <option value="Tannu">Tannu</option>
+          <option value="Roosha">Roosha</option>
+        </select>
+        <button id="btn-call-export" class="btn btn-secondary btn-sm">Export Bookings</button>
       </div>
-    </details>
+      <div class="table-wrapper" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr id="call-tracker-head">
+              <th>Author</th>
+              <th>Email</th>
+              <th>Consultant</th>
+              <th>Date &amp; Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="call-tracker-body">
+            <tr class="empty-row"><td colspan="5">No author data loaded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    <!-- Author Callback Response Form (shown only when ?callback=true) -->
+    <!-- Author Booking Form (shown only when ?book=true) -->
     <section id="author-callback-view" class="hidden">
       <div class="author-callback-container">
         <div class="author-callback-header">
           <h1>Bookleaf Publishing</h1>
-          <p class="author-callback-subtitle" id="acb-subtitle">Callback Scheduling</p>
+          <p class="author-callback-subtitle" id="acb-subtitle">Bookleaf Publishing</p>
         </div>
         <div class="author-callback-card">
-          <h2 id="acb-greeting">Hello!</h2>
+          <h2 id="acb-greeting">Loading...</h2>
           <p id="acb-description" class="acb-desc"></p>
           <div class="acb-form" id="acb-form">
-            <div class="field">
-              <label>Your Name</label>
-              <input type="text" id="acb-name" readonly class="readonly-input">
-            </div>
-            <div class="field">
-              <label>Your Email</label>
-              <input type="text" id="acb-email" readonly class="readonly-input">
-            </div>
-            <div class="field">
-              <label>Phone Number</label>
-              <input type="text" id="acb-phone" placeholder="+91XXXXXXXXXX">
-            </div>
-            <div class="field">
-              <label>Availability</label>
-              <div class="acb-radio-group">
-                <label class="acb-radio"><input type="radio" name="acb-avail" value="available" checked> I am available for this call</label>
-                <label class="acb-radio"><input type="radio" name="acb-avail" value="later"> Please contact me later</label>
-                <label class="acb-radio"><input type="radio" name="acb-avail" value="specific"> I prefer a specific date/time</label>
-              </div>
-            </div>
-            <div class="field" id="acb-datetime-field" style="display:none">
-              <label>Preferred Date &amp; Time</label>
-              <div class="date-range-row">
-                <input type="date" id="acb-date" class="date-input">
-                <input type="time" id="acb-time" class="date-input">
-              </div>
-            </div>
-            <div class="field">
-              <label>Notes (optional)</label>
-              <textarea id="acb-notes" class="webhook-textarea" rows="3" placeholder="Any specific topics you'd like to discuss..."></textarea>
-            </div>
-            <div class="btn-row">
-              <button id="btn-acb-submit" class="btn btn-primary">Confirm &amp; Notify Consultant</button>
-            </div>
-            <div id="acb-status" class="status-msg hidden"></div>
+            <!-- Calendly-style date/time picker injected by JS -->
           </div>
           <div id="acb-thankyou" class="hidden">
             <h3 style="color:var(--success);margin-bottom:8px">Thank you!</h3>
