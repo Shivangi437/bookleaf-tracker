@@ -467,7 +467,7 @@ function switchView(view) {
   }
 
   // Update booking filter: admin sees only confirmed/completed by default; consultant sees all
-  if (callDom.filterStatus) {
+  if (typeof callDom !== 'undefined' && callDom.filterStatus) {
     if (isAdmin) {
       callDom.filterStatus.innerHTML = '<option value="all">Confirmed & Completed</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option>';
     } else {
@@ -1095,7 +1095,7 @@ function djb2Hash(str) {
 }
 
 function generateBookingToken(authorEmail, consultant) {
-  return djb2Hash(authorEmail + '|' + consultant + '|' + ADMIN_PASSWORD);
+  return djb2Hash(authorEmail + '|' + consultant + '|' + 'bookleaf2025');
 }
 
 function generateBookingLink(authorEmail, consultant) {
