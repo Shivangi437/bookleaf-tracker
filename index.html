@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bookleaf – Author–Consultant Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
@@ -14,13 +11,8 @@
   <header>
     <div class="header-row">
       <div class="header-left">
-        <h1>
-          <span class="logo-icon">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 12h8v1.5H8V12zm0 3h8v1.5H8V15zm0 3h5v1.5H8V18z"/></svg>
-          </span>
-          Bookleaf – Author–Consultant Tracker
-        </h1>
-        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration &middot; Razorpay Webhook &middot; Callback Tracker</p>
+        <h1>Bookleaf – Author–Consultant Tracker</h1>
+        <p class="subtitle">Publishing consultant assignments &middot; Workflow tracking &middot; Freshdesk integration &middot; Razorpay Webhook &middot; Slot Booking</p>
       </div>
       <div class="header-right">
         <div class="identity-selector">
@@ -42,48 +34,12 @@
   <main>
     <!-- Stats -->
     <section id="stats" class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon icon-authors">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-authors">0</span>
-        <span class="stat-label">Authors</span>
-      </div>
-      <div class="stat-card accent-indian">
-        <div class="stat-icon icon-indian">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-indian">0</span>
-        <span class="stat-label">Indian Bestseller</span>
-      </div>
-      <div class="stat-card accent-intl">
-        <div class="stat-icon icon-intl">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5H4.847zM8.5 5v2.5h2.99a12.495 12.495 0 0 0-.337-2.5H8.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5H4.51zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5H8.5zM5.145 12c.138.386.295.744.468 1.068.552 1.035 1.218 1.65 1.887 1.855V12H5.145zm.182 2.472a6.696 6.696 0 0 1-.597-.933A9.268 9.268 0 0 1 4.09 12H2.255a7.024 7.024 0 0 0 3.072 2.472zM3.82 11a13.652 13.652 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5H3.82zm6.853 3.472A7.024 7.024 0 0 0 13.745 12H11.91a9.27 9.27 0 0 1-.64 1.539 6.688 6.688 0 0 1-.597.933zM8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855.173-.324.33-.682.468-1.068H8.5zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.65 13.65 0 0 1-.312 2.5zm2.802-3.5a6.959 6.959 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5h2.49zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.024 7.024 0 0 0-3.072-2.472c.218.284.418.598.597.933zM10.855 4a7.966 7.966 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4h2.355z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-intl">0</span>
-        <span class="stat-label">Intl Bestseller</span>
-      </div>
-      <div class="stat-card accent-fd">
-        <div class="stat-icon icon-fd">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2 .5v2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5zm0 4v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zM4 12.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-tickets">0</span>
-        <span class="stat-label">FD Tickets</span>
-      </div>
-      <div class="stat-card accent-good">
-        <div class="stat-icon icon-good">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm0-1A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-good">0</span>
-        <span class="stat-label">Good to Go</span>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-assigned">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/><path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/></svg>
-        </div>
-        <span class="stat-value" id="stat-assigned">0</span>
-        <span class="stat-label">Assigned</span>
-      </div>
+      <div class="stat-card"><span class="stat-value" id="stat-authors">0</span><span class="stat-label">Authors</span></div>
+      <div class="stat-card accent-indian"><span class="stat-value" id="stat-indian">0</span><span class="stat-label">Indian Bestseller</span></div>
+      <div class="stat-card accent-intl"><span class="stat-value" id="stat-intl">0</span><span class="stat-label">Intl Bestseller</span></div>
+      <div class="stat-card accent-fd"><span class="stat-value" id="stat-tickets">0</span><span class="stat-label">FD Tickets</span></div>
+      <div class="stat-card accent-good"><span class="stat-value" id="stat-good">0</span><span class="stat-label">Good to Go</span></div>
+      <div class="stat-card"><span class="stat-value" id="stat-assigned">0</span><span class="stat-label">Assigned</span></div>
     </section>
 
     <!-- Consultant Workload -->
@@ -160,73 +116,45 @@
     <details class="admin-section">
       <summary class="admin-toggle">Admin Tools</summary>
       <div class="config-row">
-        <section id="razorpay-panel" class="card">
-          <h2>Razorpay Integration</h2>
+        <section id="import-panel" class="card">
+          <h2>Data Import</h2>
           <div class="config-form">
             <div class="field">
-              <label>Razorpay Key ID</label>
-              <input type="text" id="rp-key-id" placeholder="rzp_live_xxxxxxxxxxxx">
-            </div>
-            <div class="field">
-              <label>Razorpay Key Secret</label>
-              <input type="password" id="rp-key-secret" placeholder="Paste your Razorpay key secret here">
-            </div>
-            <div class="field">
-              <label>Date Range</label>
-              <div class="date-range-row">
-                <input type="date" id="rp-date-from" class="date-input">
-                <span class="date-separator">to</span>
-                <input type="date" id="rp-date-to" class="date-input">
+              <div class="file-upload-area" id="drop-zone">
+                <input type="file" id="csv-file" accept=".csv">
+                <p>Click or drag &amp; drop Razorpay CSV export</p>
               </div>
             </div>
             <div class="field">
               <label>Filter by Package</label>
               <div class="checkbox-row">
-                <label class="checkbox-label"><input type="checkbox" id="filter-indian" checked> ₹11,999 – Indian Bestseller</label>
-                <label class="checkbox-label"><input type="checkbox" id="filter-intl" checked> ₹249 – Intl Bestseller</label>
+                <label class="checkbox-label"><input type="checkbox" id="filter-indian" checked> Indian Bestseller</label>
+                <label class="checkbox-label"><input type="checkbox" id="filter-intl" checked> Intl Bestseller</label>
               </div>
+            </div>
+            <div class="field">
+              <label>Manual Tracker Override</label>
+              <div class="tracker-upload-row">
+                <select id="tracker-consultant" class="filter-select">
+                  <option value="Vandana">Vandana</option>
+                  <option value="Sapna">Sapna</option>
+                  <option value="Tannu">Tannu</option>
+                  <option value="Roosha">Roosha</option>
+                  <option value="Firdaus">Firdaus</option>
+                </select>
+                <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
+                <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
+              </div>
+              <div id="tracker-status" class="status-msg hidden"></div>
+              <div id="tracker-loaded" class="tracker-tags"></div>
             </div>
             <div class="btn-row">
-              <button id="btn-rp-fetch" class="btn btn-primary" disabled>Fetch Payments &amp; Sync</button>
+              <button id="btn-import" class="btn btn-primary" disabled>Import CSV &amp; Auto-Assign</button>
               <button id="btn-load-sample" class="btn btn-secondary">Sample Data</button>
             </div>
-            <div id="rp-status" class="status-msg hidden"></div>
-            <div class="rp-info">
-              <p class="info-text">Fetches captured payments from Razorpay API. New authors are auto-assigned via round-robin. Existing authors keep their assignments.</p>
-            </div>
+            <div id="api-status" class="status-msg hidden"></div>
+            <p class="info-text" style="margin-top:4px">Upload Razorpay CSV export or use Sample Data. New authors are auto-assigned via round-robin.</p>
           </div>
-          <!-- Hidden CSV upload (fallback) -->
-          <details class="csv-fallback">
-            <summary class="csv-fallback-toggle">Manual CSV Upload (Fallback)</summary>
-            <div class="csv-fallback-body">
-              <div class="field">
-                <div class="file-upload-area" id="drop-zone">
-                  <input type="file" id="csv-file" accept=".csv">
-                  <p>Click or drag &amp; drop Razorpay CSV</p>
-                </div>
-              </div>
-              <div class="field">
-                <label>Manual Tracker Override</label>
-                <div class="tracker-upload-row">
-                  <select id="tracker-consultant" class="filter-select">
-                    <option value="Vandana">Vandana</option>
-                    <option value="Sapna">Sapna</option>
-                    <option value="Tannu">Tannu</option>
-                    <option value="Roosha">Roosha</option>
-                    <option value="Firdaus">Firdaus</option>
-                  </select>
-                  <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
-                  <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
-                </div>
-                <div id="tracker-status" class="status-msg hidden"></div>
-                <div id="tracker-loaded" class="tracker-tags"></div>
-              </div>
-              <div class="btn-row">
-                <button id="btn-import" class="btn btn-primary" disabled>Import CSV &amp; Auto-Assign</button>
-              </div>
-              <div id="api-status" class="status-msg hidden"></div>
-            </div>
-          </details>
         </section>
 
         <section id="freshdesk-panel" class="card">
@@ -306,141 +234,68 @@
       </div>
     </details>
 
-    <!-- Callback Form & Tracker -->
-    <details class="admin-section" id="callback-section">
-      <summary class="admin-toggle">Callback Requests</summary>
-      <div class="callback-content">
-        <div class="config-row">
-          <!-- Callback Form -->
-          <section class="card">
-            <h2>Request Callback</h2>
-            <div class="config-form" id="callback-form">
-              <div class="field">
-                <label>Author Name</label>
-                <input type="text" id="cb-author-name" placeholder="Enter author name" list="cb-author-list">
-                <datalist id="cb-author-list"></datalist>
-              </div>
-              <div class="field">
-                <label>Author Email</label>
-                <input type="text" id="cb-author-email" placeholder="author@example.com" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Phone Number</label>
-                <input type="text" id="cb-phone" placeholder="+91XXXXXXXXXX" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Assigned Consultant</label>
-                <input type="text" id="cb-consultant" readonly class="readonly-input">
-              </div>
-              <div class="field">
-                <label>Callback Reason</label>
-                <select id="cb-reason" class="filter-select">
-                  <option value="">Select reason...</option>
-                  <option value="manuscript-query">Manuscript Query</option>
-                  <option value="payment-issue">Payment Issue</option>
-                  <option value="publishing-status">Publishing Status Update</option>
-                  <option value="marketing-query">Marketing Query</option>
-                  <option value="general-inquiry">General Inquiry</option>
-                  <option value="complaint">Complaint</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Priority</label>
-                <select id="cb-priority" class="filter-select">
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Preferred Time</label>
-                <div class="date-range-row">
-                  <input type="date" id="cb-date" class="date-input">
-                  <input type="time" id="cb-time" class="date-input">
-                </div>
-              </div>
-              <div class="field">
-                <label>Notes</label>
-                <textarea id="cb-notes" class="webhook-textarea" rows="3" placeholder="Additional notes about the callback request..."></textarea>
-              </div>
-              <div class="btn-row">
-                <button id="btn-cb-submit" class="btn btn-primary" disabled>Submit Callback Request</button>
-                <button id="btn-cb-clear" class="btn btn-secondary">Clear Form</button>
-              </div>
-              <div id="cb-form-status" class="status-msg hidden"></div>
-            </div>
-          </section>
-
-          <!-- Callback Stats -->
-          <section class="card">
-            <h2>Callback Summary</h2>
-            <div class="callback-stats-grid" id="callback-stats">
-              <div class="summary-card summary-total"><span class="summary-num" id="cb-stat-total">0</span><span class="summary-label">Total Requests</span></div>
-              <div class="summary-card summary-pending"><span class="summary-num" id="cb-stat-pending">0</span><span class="summary-label">Pending</span></div>
-              <div class="summary-card summary-inprog"><span class="summary-num" id="cb-stat-scheduled">0</span><span class="summary-label">Scheduled</span></div>
-              <div class="summary-card summary-done"><span class="summary-num" id="cb-stat-completed">0</span><span class="summary-label">Completed</span></div>
-              <div class="summary-card summary-tickets"><span class="summary-num" id="cb-stat-overdue">0</span><span class="summary-label">Overdue</span></div>
-              <div class="summary-card" style="border-left:4px solid var(--warning)"><span class="summary-num" id="cb-stat-cancelled">0</span><span class="summary-label">Cancelled</span></div>
-            </div>
-            <h3 style="font-size:0.9rem;margin:16px 0 8px">By Consultant</h3>
-            <div id="cb-consultant-breakdown" class="workload-grid"></div>
-          </section>
-        </div>
-
-        <!-- Callback Tracker Table -->
-        <section class="card" style="margin-top:0">
-          <h2>Callback Tracker</h2>
-          <div class="table-controls">
-            <input type="text" id="cb-search" placeholder="Search callbacks..." class="search-input">
-            <select id="cb-filter-status" class="filter-select">
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <select id="cb-filter-consultant" class="filter-select">
-              <option value="all">All Consultants</option>
-              <option value="Vandana">Vandana</option>
-              <option value="Sapna">Sapna</option>
-              <option value="Tannu">Tannu</option>
-              <option value="Roosha">Roosha</option>
-              <option value="Firdaus">Firdaus</option>
-            </select>
-            <select id="cb-filter-priority" class="filter-select">
-              <option value="all">All Priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="normal">Normal</option>
-            </select>
-            <button id="btn-cb-export" class="btn btn-secondary btn-sm">Export Callbacks</button>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Author</th>
-                  <th>Phone</th>
-                  <th>Consultant</th>
-                  <th>Reason</th>
-                  <th>Priority</th>
-                  <th>Scheduled</th>
-                  <th>Status</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="cb-tracker-body">
-                <tr class="empty-row"><td colspan="10">No callback requests yet.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+    <!-- Booking Section (visible to both admin and consultants) -->
+    <section id="booking-section" class="card">
+      <h2 id="booking-section-title">Booking Tracker</h2>
+      <p class="info-text" id="booking-section-desc" style="margin:-8px 0 12px">Track all confirmed bookings below.</p>
+      <div class="call-overview-stats" id="call-overview-stats"></div>
+      <div class="table-controls" style="margin-top:12px">
+        <input type="text" id="call-search" placeholder="Search authors..." class="search-input">
+        <select id="call-filter-status" class="filter-select">
+          <option value="all">All Statuses</option>
+          <option value="pending">No Booking</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select id="call-filter-consultant" class="filter-select">
+          <option value="all">All Consultants</option>
+          <option value="Vandana">Vandana</option>
+          <option value="Sapna">Sapna</option>
+          <option value="Tannu">Tannu</option>
+          <option value="Roosha">Roosha</option>
+        </select>
+        <button id="btn-call-export" class="btn btn-secondary btn-sm">Export Bookings</button>
       </div>
-    </details>
+      <div class="table-wrapper" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr id="call-tracker-head">
+              <th>Author</th>
+              <th>Email</th>
+              <th>Consultant</th>
+              <th>Date &amp; Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="call-tracker-body">
+            <tr class="empty-row"><td colspan="5">No author data loaded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Author Booking Form (shown only when ?book=true) -->
+    <section id="author-callback-view" class="hidden">
+      <div class="author-callback-container">
+        <div class="author-callback-header">
+          <h1>Bookleaf Publishing</h1>
+          <p class="author-callback-subtitle" id="acb-subtitle">Bookleaf Publishing</p>
+        </div>
+        <div class="author-callback-card">
+          <h2 id="acb-greeting">Loading...</h2>
+          <p id="acb-description" class="acb-desc"></p>
+          <div class="acb-form" id="acb-form">
+            <!-- Calendly-style date/time picker injected by JS -->
+          </div>
+          <div id="acb-thankyou" class="hidden">
+            <h3 style="color:var(--success);margin-bottom:8px">Thank you!</h3>
+            <p>Your response has been recorded. Your consultant will be in touch shortly.</p>
+            <div id="acb-response-summary" class="acb-summary-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Freshdesk Tickets Table -->
     <section id="tickets-section" class="card hidden">
@@ -473,21 +328,6 @@
   </main>
 
   <footer><p>Internal Tool &middot; Bookleaf Publishing &middot; Author–Consultant Tracker</p></footer>
-
-  <!-- Scroll to top button -->
-  <button class="scroll-top-btn" id="scroll-top" title="Scroll to top">
-    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/></svg>
-  </button>
-  <script>
-    // Scroll-to-top button
-    const scrollBtn = document.getElementById('scroll-top');
-    window.addEventListener('scroll', () => {
-      scrollBtn.classList.toggle('visible', window.scrollY > 300);
-    });
-    scrollBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  </script>
   <script src="tracker-data.js"></script>
   <script src="authors-data.js"></script>
   <script src="app.js"></script>
