@@ -32,8 +32,7 @@ const STAGES = [
   'confirmationEmail', // Confirmation Email
 ];
 
-// Admin password (change this to your preferred password)
-const ADMIN_PASSWORD = 'bookleaf2025';
+// Admin access (no password required)
 
 // Ã¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 const state = {
@@ -83,11 +82,15 @@ const dom = {
 // Ã¢ÂÂÃ¢ÂÂ Freshdesk API Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function fdHeaders() {
   const key = dom.fdApiKey.value.trim();
-  return { 'Authorization': 'Basic ' + btoa(key + ':X'), 'Content-Type': 'application/json' };
+  if (IS_LOCAL) {
+    return { 'Authorization': 'Basic ' + btoa(key + ':X'), 'Content-Type': 'application/json' };
+  }
+  // On Vercel, send API key via custom header — the proxy handles Basic auth
+  return { 'x-fd-key': key, 'Content-Type': 'application/json' };
 }
 function fdUrl(path) {
   if (IS_LOCAL) return `/fd-api/${path}`;
-  return `https://${FD_DOMAIN}/api/v2/${path}`;
+  return `/api/freshdesk?path=${encodeURIComponent(path)}`;
 }
 function rpUrl(path) {
   if (IS_LOCAL) return `/rp-api/${path}`;
@@ -168,11 +171,7 @@ async function fetchFreshdeskTickets() {
     dom.ticketsSection.classList.remove('hidden');
     refreshUI();
   } catch (err) {
-    if (!IS_LOCAL && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
-      showFdStatus('Error: Freshdesk API blocked by CORS. Use the local proxy (python3 server.py \u2192 localhost:8080) for Freshdesk integration.', 'error');
-    } else {
-      showFdStatus(`Error: ${err.message}`, 'error');
-    }
+    showFdStatus(`Error: ${err.message}`, 'error');
   }
 }
 
@@ -922,19 +921,8 @@ dom.btnLoadTracker.addEventListener('click', loadTrackerCSV);
 dom.identitySelect.addEventListener('change', e => {
   const view = e.target.value;
   if (view === 'admin') {
-    // Require password for admin access
-    if (!state.adminUnlocked) {
-      const pwd = prompt('Enter admin password:');
-      if (pwd !== ADMIN_PASSWORD) {
-        alert('Incorrect password.');
-        // Reset dropdown to previous value
-        dom.identitySelect.value = state.currentView;
-        return;
-      }
-      state.adminUnlocked = true;
-    }
+    state.adminUnlocked = true;
   } else {
-    // Lock admin when switching to team view
     state.adminUnlocked = false;
   }
   switchView(view);
@@ -947,15 +935,7 @@ dom.dropZone.addEventListener('drop', e => { e.preventDefault(); dom.dropZone.cl
 loadPreBuiltTrackerData();
 loadPreBuiltAuthors();
 
-// Show environment hint if not on localhost
-if (!IS_LOCAL) {
-  const hint = document.createElement('div');
-  hint.className = 'status-msg status-info';
-  hint.style.cssText = 'margin:0;border-radius:0 0 6px 6px;font-size:0.82rem;padding:6px 12px;';
-  hint.textContent = '\u2139\uFE0F Freshdesk & Razorpay API integration requires the local proxy (python3 server.py \u2192 localhost:8080). Author data and workflows work here.';
-  const fdPanel = document.getElementById('freshdesk-panel');
-  if (fdPanel) fdPanel.querySelector('.config-form').prepend(hint);
-}
+// Freshdesk API works via serverless proxy on Vercel, no hint needed
 
 // URL-based view: ?view=Vandana or ?view=admin
 (function applyURLView() {
@@ -975,17 +955,45 @@ if (!IS_LOCAL) {
   }
 })();
 
+function parseDate_DDMMYYYY(str) {
+  if (!str) return null;
+  // Handle "DD/MM/YYYY" or "DD/MM/YYYY HH:MM:SS"
+  const parts = str.split(/[\s]+/)[0].split('/');
+  if (parts.length !== 3) return null;
+  return new Date(+parts[2], +parts[1] - 1, +parts[0]);
+}
+
+const REASSIGN_CUTOFF = new Date(2025, 1, 17); // 17 Feb 2025
+
 function loadPreBuiltAuthors() {
   if (typeof AUTHORS_DATA === 'undefined') return;
-  state.authors = AUTHORS_DATA.map((a, i) => ({
-    id: `a-${i}`,
-    name: a.n, email: a.e, phone: a.ph,
-    package: a.pl, packageKey: a.pk, paymentDate: a.dt,
-    consultant: a.c, status: a.st, remarks: a.rm || '',
-    introEmail: !!a.ie, authorResponse: !!a.ar, followUp: !!a.fu, markedYes: !!a.my,
-    filesGenerated: !!a.fg, addressMarketing: !!a.am, primePlacement: !!a.pp, confirmationEmail: !!a.ce,
-  }));
-  console.log(`Auto-loaded ${state.authors.length} authors`);
+  let rrIdx = 0;
+  let reassigned = 0;
+  state.authors = AUTHORS_DATA.map((a, i) => {
+    let consultant = a.c;
+    let status = a.st;
+
+    // Round-robin reassign authors with payment date after 17 Feb 2025
+    const dt = parseDate_DDMMYYYY(a.dt);
+    if (dt && dt > REASSIGN_CUTOFF) {
+      const c = ACTIVE_CONSULTANTS[rrIdx % ACTIVE_CONSULTANTS.length];
+      rrIdx++;
+      consultant = c.name;
+      if (!status || status === 'assigned') status = 'assigned';
+      reassigned++;
+    }
+
+    return {
+      id: `a-${i}`,
+      name: a.n, email: a.e, phone: a.ph,
+      package: a.pl, packageKey: a.pk, paymentDate: a.dt,
+      consultant, status, remarks: a.rm || '',
+      introEmail: !!a.ie, authorResponse: !!a.ar, followUp: !!a.fu, markedYes: !!a.my,
+      filesGenerated: !!a.fg, addressMarketing: !!a.am, primePlacement: !!a.pp, confirmationEmail: !!a.ce,
+    };
+  });
+  state.rrIndex = rrIdx; // Continue round-robin from where we left off
+  console.log(`Auto-loaded ${state.authors.length} authors (${reassigned} reassigned after 17-Feb-2025)`);
   refreshUI();
 }
 
@@ -1138,6 +1146,69 @@ webhookDom.btnClear.addEventListener('click', () => {
   webhookDom.btnProcess.disabled = true;
   showWebhookStatus('Log cleared.', 'info');
 });
+
+// Load webhook events received server-side (from Vercel serverless function)
+async function loadWebhookEvents() {
+  if (IS_LOCAL) return; // No serverless endpoint locally
+  try {
+    const res = await fetch('/api/razorpay-webhook');
+    if (!res.ok) return;
+    const events = await res.json();
+    if (!Array.isArray(events) || events.length === 0) return;
+
+    let added = 0;
+    events.forEach(e => {
+      if (!e.processed || !e.email) return;
+      // Add to webhook log for display
+      const amountRupees = e.amount || 0;
+      const pkg = PACKAGES[amountRupees];
+      state.webhookLog.push({
+        time: e.receivedAt ? new Date(e.receivedAt).toLocaleTimeString() : '–',
+        event: e.event || 'payment.captured',
+        author: e.name || '–',
+        email: e.email || '–',
+        pkg: pkg ? pkg.label : `₹${amountRupees}`,
+        amount: `₹${amountRupees}`,
+        status: 'Server',
+      });
+
+      // Add author if not already present
+      const email = (e.email || '').toLowerCase().trim();
+      if (!email) return;
+      const existing = state.authors.find(a => a.email.toLowerCase() === email);
+      if (existing) return;
+
+      if (!pkg) return;
+
+      const c = ACTIVE_CONSULTANTS[state.rrIndex % ACTIVE_CONSULTANTS.length];
+      state.rrIndex++;
+
+      state.authors.push({
+        id: e.paymentId || `wh-${Date.now()}-${added}`,
+        name: (e.name || email.split('@')[0]).trim(),
+        email: email,
+        phone: (e.phone || '').trim(),
+        package: pkg.label, packageKey: pkg.key,
+        paymentDate: e.createdAt ? new Date(e.createdAt * 1000).toLocaleDateString('en-IN') : new Date(e.receivedAt).toLocaleDateString('en-IN'),
+        consultant: c.name, status: 'assigned', remarks: 'Via webhook (server)',
+        introEmail: false, authorResponse: false, followUp: false, markedYes: false,
+        filesGenerated: false, addressMarketing: false, primePlacement: false, confirmationEmail: false,
+      });
+      added++;
+    });
+
+    if (added > 0 || state.webhookLog.length > 0) {
+      renderWebhookLog();
+      if (added > 0) refreshUI();
+      console.log(`Loaded ${events.length} server webhook events, ${added} new authors added.`);
+    }
+  } catch (err) {
+    console.warn('Could not load webhook events:', err.message);
+  }
+}
+
+// Auto-load webhook events on page load
+loadWebhookEvents();
 
 // ── Callback Form & Tracker ──────────────────────────────────────────────
 state.callbacks = [];

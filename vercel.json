@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/razorpay-webhook.js": {
+      "maxDuration": 10
+    }
+  }
+}
