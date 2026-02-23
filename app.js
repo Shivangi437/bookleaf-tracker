@@ -777,29 +777,6 @@ dom.dropZone.addEventListener('drop', e => { e.preventDefault(); dom.dropZone.cl
   } catch {}
 })();
 
-loadPreBuiltTrackerData();
-loadPreBuiltAuthors();
-
-// Freshdesk API works via serverless proxy on Vercel, no hint needed
-
-// URL-based view: ?view=Vandana or ?view=admin
-(function applyURLView() {
-  const params = new URLSearchParams(window.location.search);
-  const viewParam = params.get('view');
-  if (viewParam) {
-    const validViews = ['admin', ...CONSULTANTS.map(c => c.name)];
-    if (validViews.includes(viewParam)) {
-      if (viewParam !== 'admin') {
-        state.adminUnlocked = false;
-        dom.identitySelect.value = viewParam;
-        switchView(viewParam);
-        // Hide identity selector for team members (they only see their view)
-        document.querySelector('.identity-selector').style.display = 'none';
-      }
-    }
-  }
-})();
-
 function parseDate_DDMMYYYY(str) {
   if (!str) return null;
   // Handle "DD/MM/YYYY" or "DD/MM/YYYY HH:MM:SS"
@@ -841,6 +818,29 @@ function loadPreBuiltAuthors() {
   console.log(`Auto-loaded ${state.authors.length} authors (${reassigned} reassigned after 17-Feb-2025)`);
   refreshUI();
 }
+
+loadPreBuiltTrackerData();
+loadPreBuiltAuthors();
+
+// Freshdesk API works via serverless proxy on Vercel, no hint needed
+
+// URL-based view: ?view=Vandana or ?view=admin
+(function applyURLView() {
+  const params = new URLSearchParams(window.location.search);
+  const viewParam = params.get('view');
+  if (viewParam) {
+    const validViews = ['admin', ...CONSULTANTS.map(c => c.name)];
+    if (validViews.includes(viewParam)) {
+      if (viewParam !== 'admin') {
+        state.adminUnlocked = false;
+        dom.identitySelect.value = viewParam;
+        switchView(viewParam);
+        // Hide identity selector for team members (they only see their view)
+        document.querySelector('.identity-selector').style.display = 'none';
+      }
+    }
+  }
+})();
 
 // ── Razorpay Webhook ──────────────────────────────────────────────────────
 state.webhookLog = [];
