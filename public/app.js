@@ -553,13 +553,6 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
         t.matchedAuthor = author.name;
         t.matchedConsultant = author.consultant;
       }
-      // Auto-mark: if ticket is Resolved/Closed → mark author as "good-to-go"
-      if (t.isMatched && (t.statusCode === 4 || t.statusCode === 5)) {
-        if (author && author.status !== 'completed') {
-          author.status = 'good-to-go';
-          queueAuthorOverridePersist(author);
-        }
-      }
       // Re-check needsReassign against current agent map
       if (t.isMatched && t.matchedConsultant) {
         const c = CONSULTANTS.find(c2 => c2.name === t.matchedConsultant);
@@ -571,13 +564,14 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
     state.tickets = cachedTickets;
 
     state.fdLastTicketCount = cachedTickets.length;
+    state.fdLastCheckedTime = new Date();
     if (body.fetchedAt) {
       const parsed = new Date(body.fetchedAt);
       if (!Number.isNaN(parsed.getTime())) {
         state.fdLastFetchTime = parsed;
-        updateFdLastUpdated();
       }
     }
+    updateFdLastUpdated();
     if (dom.btnFdAutoAssign) {
       const needsAssign = state.tickets.filter(t => t.needsReassign).length;
       dom.btnFdAutoAssign.disabled = needsAssign === 0;
@@ -728,14 +722,8 @@ async function fetchFreshdeskTickets(opts = {}) {
       };
     });
 
-    // Auto-mark: if Freshdesk ticket is Resolved/Closed → mark author as "good-to-go"
+    // Re-check needsReassign against current agent map
     state.tickets.forEach(t => {
-      if (t.isMatched && (t.statusCode === 4 || t.statusCode === 5)) {
-        const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
-        if (author && author.status !== 'completed') {
-          author.status = 'good-to-go';
-        }
-      }
       if (t.isMatched && t.matchedConsultant) {
         const c = CONSULTANTS.find(c2 => c2.name === t.matchedConsultant);
         if (c && c.freshdeskAgentId && c.freshdeskAgentId !== t.currentAssignee) t.needsReassign = true;
@@ -1997,9 +1985,17 @@ function renderCallbacks() {
 
 // ── Auto-Refresh & Notifications ─────────────────────────────────────────────
 function updateFdLastUpdated() {
-  if (!state.fdLastFetchTime || !dom.fdLastUpdated) return;
-  const fmt = state.fdLastFetchTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  dom.fdLastUpdated.textContent = `Last updated: ${fmt}`;
+  if (!dom.fdLastUpdated) return;
+  const parts = [];
+  if (state.fdLastFetchTime) {
+    const fmt = state.fdLastFetchTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    parts.push(`Server sync: ${fmt}`);
+  }
+  if (state.fdLastCheckedTime) {
+    const fmt2 = state.fdLastCheckedTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    parts.push(`Last checked: ${fmt2}`);
+  }
+  dom.fdLastUpdated.textContent = parts.join(' · ') || '';
 }
 
 function startFdAutoRefresh() {
@@ -2014,8 +2010,10 @@ function startFdAutoRefresh() {
       persistFreshdeskPrefs();
       return;
     }
-    console.log(`[Auto-refresh] Fetching tickets (every ${minutes}m)...`);
-    refreshFreshdeskForAutoTick().catch(err => {
+    refreshFreshdeskForAutoTick().then(() => {
+      state.fdLastCheckedTime = new Date();
+      updateFdLastUpdated();
+    }).catch(err => {
       console.warn('Auto-refresh tick failed:', err && err.message ? err.message : err);
     });
   }, ms);
