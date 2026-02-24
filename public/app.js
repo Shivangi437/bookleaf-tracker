@@ -544,12 +544,17 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
     }
     const body = await res.json().catch(() => ({}));
     const cachedTickets = Array.isArray(body.tickets) ? body.tickets : [];
-    state.tickets = cachedTickets;
 
-    // Auto-mark: if cached ticket is Resolved/Closed → mark author as "good-to-go"
+    // Re-match cached tickets against current state.authors (may include newly imported authors)
     cachedTickets.forEach(t => {
+      const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
+      if (author) {
+        t.isMatched = true;
+        t.matchedAuthor = author.name;
+        t.matchedConsultant = author.consultant;
+      }
+      // Auto-mark: if ticket is Resolved/Closed → mark author as "good-to-go"
       if (t.isMatched && (t.statusCode === 4 || t.statusCode === 5)) {
-        const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
         if (author && author.status !== 'completed') {
           author.status = 'good-to-go';
           queueAuthorOverridePersist(author);
@@ -563,6 +568,7 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
         }
       }
     });
+    state.tickets = cachedTickets;
 
     state.fdLastTicketCount = cachedTickets.length;
     if (body.fetchedAt) {
