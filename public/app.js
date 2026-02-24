@@ -849,7 +849,7 @@ async function fetchRazorpayPayments() {
 
     while (hasMore) {
       const url = rpUrl(`payments?${params}&skip=${skip}`);
-      showRpStatus(`Fetching payments... (${allPayments.length} so far)`, 'info');
+      showRpStatus(`Scanning all Razorpay payments... (${allPayments.length} scanned, filtering for bestseller amounts)`, 'info');
 
       const res = await fetch(url, { headers: rpHeaders() });
       if (!res.ok) {
@@ -871,8 +871,6 @@ async function fetchRazorpayPayments() {
       if (hasMore) await new Promise(r => setTimeout(r, 300));
     }
 
-    showRpStatus(`${allPayments.length} payments fetched. Processing...`, 'info');
-
     // Filter: only captured payments for the selected packages
     const targetAmounts = [];
     if (incI) targetAmounts.push(1199900); // ₹11,999 in paise
@@ -881,6 +879,8 @@ async function fetchRazorpayPayments() {
     const captured = allPayments.filter(p =>
       p.status === 'captured' && targetAmounts.includes(p.amount)
     );
+
+    showRpStatus(`${allPayments.length} total payments fetched — filtering for bestseller amounts — ${captured.length} matched.`, 'info');
 
     // Deduplicate by email (keep latest payment)
     const byEmail = {};
