@@ -3,14 +3,35 @@
   "builds": [
     {
       "src": "api/**/*.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "api/_data/**"
+      }
     },
     {
       "src": "public/**",
       "use": "@vercel/static"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/fd-sync",
+      "schedule": "*/10 * * * *"
+    }
+  ],
   "routes": [
+    {
+      "src": "/api/fd-sync",
+      "dest": "/api/fd_sync.py"
+    },
+    {
+      "src": "/api/fd-cache",
+      "dest": "/api/fd_cache.py"
+    },
+    {
+      "src": "/api/fd-webhook",
+      "dest": "/api/fd_webhook.py"
+    },
     {
       "src": "/api/fd/(.*)",
       "dest": "/api/fd.py"
@@ -18,6 +39,18 @@
     {
       "src": "/api/rp/(.*)",
       "dest": "/api/rp.py"
+    },
+    {
+      "src": "/api/razorpay-webhook",
+      "dest": "/api/razorpay_webhook.py"
+    },
+    {
+      "src": "/api/state",
+      "dest": "/api/state.py"
+    },
+    {
+      "src": "/api/data",
+      "dest": "/api/data.py"
     },
     {
       "src": "/(.*)",

@@ -1,13 +1,35 @@
 """Freshdesk API proxy – Vercel serverless function"""
 import json
+import os
+import base64
 import urllib.request
 import urllib.error
 from http.server import BaseHTTPRequestHandler
 
 FD_DOMAIN = "bookleafpublishing.freshdesk.com"
 
+
+def _server_freshdesk_key():
+    return (
+        os.getenv("FRESHDESK_API_KEY")
+        or os.getenv("BOOKLEAF_FRESHDESK_API_KEY")
+        or os.getenv("FRESHDESK_KEY")
+        or ""
+    )
+
+
+def _basic_auth_from_key(key):
+    token = base64.b64encode(f"{key}:X".encode("utf-8")).decode("ascii")
+    return f"Basic {token}"
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path in ('/api/fd/config', '/api/fd/config/'):
+            self._send_json(200, {
+                'configured': bool(_server_freshdesk_key()),
+                'domain': FD_DOMAIN,
+            })
+            return
         self._proxy('GET')
 
     def do_PUT(self):
@@ -32,6 +54,10 @@ class handler(BaseHTTPRequestHandler):
         fd_url = f"https://{FD_DOMAIN}/api/v2/{path}"
 
         auth = self.headers.get('Authorization', '')
+        if not auth:
+            key = _server_freshdesk_key()
+            if key:
+                auth = _basic_auth_from_key(key)
         headers = {
             'Authorization': auth,
             'Content-Type': 'application/json',
@@ -72,3 +98,11 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+    def _send_json(self, status, body):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Cache-Control', 'no-store')
+        self._cors()
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())

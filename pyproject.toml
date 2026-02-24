@@ -1,0 +1,9 @@
+[project]
+name = "bookleaf-tracker"
+version = "0.0.0"
+description = "Bookleaf author-consultant tracker serverless helpers"
+requires-python = ">=3.11"
+dependencies = [
+  "psycopg[binary]>=3.2.0",
+  "vercel>=0.5.0",
+]
