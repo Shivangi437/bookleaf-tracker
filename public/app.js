@@ -2,7 +2,7 @@
 const CONSULTANTS = [
   { id: 'c-1', name: 'Vandana', fullName: 'Vandana Pradhan', email: 'vandana@bookleafpub.in', freshdeskAgentId: null, active: true },
   { id: 'c-2', name: 'Sapna',   fullName: 'Sapna Kumari',    email: 'sapna@bookleafpub.in',   freshdeskAgentId: null, active: true },
-  { id: 'c-3', name: 'Tannu',   fullName: 'Tannu Tiwari',    email: 'tannu@bookleafpub.in',   freshdeskAgentId: null, active: true },
+  { id: 'c-3', name: 'Tannu',   fullName: 'Tannu Tiwari',    email: 'tannu@bookleafpub.in',   freshdeskAgentId: null, active: false },
   { id: 'c-4', name: 'Roosha',  fullName: 'Roosha',           email: 'roosha@bookleafpub.in',  freshdeskAgentId: null, active: true },
   { id: 'c-5', name: 'Firdaus', fullName: 'Firdaus',          email: '',                        freshdeskAgentId: null, active: false },
 ];
@@ -15,7 +15,7 @@ const PACKAGES = {
 };
 
 const FD_DOMAIN = 'bookleafpublishing.freshdesk.com';
-const FD_STATUS = { 2: 'Open', 3: 'Pending', 4: 'Resolved', 5: 'Closed' };
+const FD_STATUS = { 2: 'Open', 3: 'Pending', 4: 'Resolved', 5: 'Closed', 6: 'Waiting', 7: 'Waiting-3P' };
 const AUTHOR_STATUS_OPTIONS = ['assigned', 'in-progress', 'good-to-go', 'completed'];
 const AUTHOR_STATUS_LABELS = {
   'assigned': 'Assigned',
@@ -40,6 +40,7 @@ const STAGES = [
 ];
 
 const DEFAULT_REASSIGN_CUTOFF = '2026-02-17'; // YYYY-MM-DD (IST business cutoff)
+const RESIGNED_REASSIGN = { 'Tannu': { targets: ['Sapna', 'Vandana'], after: '2026-03-23' } };
 const IS_BOOKING_MODE = new URLSearchParams(window.location.search).get('book') === 'true';
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ const dom = {
   filterConsultant: $id('filter-consultant'), filterStatus: $id('filter-status'),
   tbody: $id('assignments-body'), workloadGrid: $id('workload-grid'),
   ticketsSection: $id('tickets-section'), ticketSearch: $id('ticket-search'),
-  ticketFilterMatch: $id('ticket-filter-match'), ticketsBody: $id('tickets-body'),
+  ticketFilterStatus: $id('ticket-filter-status'), ticketFilterMatch: $id('ticket-filter-match'), ticketsBody: $id('tickets-body'),
   trackerConsultant: $id('tracker-consultant'), trackerCsv: $id('tracker-csv'),
   trackerSheetUrl: $id('tracker-sheet-url'), btnLoadTrackerSheet: $id('btn-load-tracker-sheet'),
   btnLoadTracker: $id('btn-load-tracker'), trackerStatus: $id('tracker-status'),
@@ -530,11 +531,19 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
   if (!canUseFreshdeskServerCache()) return false;
   if (!opts.force && state.tickets.length) return false;
   const adminPassword = (opts.adminPassword || state.adminPassword || getStoredAdminPassword() || '').trim();
-  if (!adminPassword) return false;
+  const consultantName = opts.consultant || (state.currentView !== 'admin' ? state.currentView : '');
+  // Allow loading for consultant view (without admin password) or admin view (with password)
+  if (!adminPassword && !consultantName) return false;
   try {
     const url = new URL('/api/fd-cache', window.location.origin);
-    url.searchParams.set('view', 'admin');
-    const res = await fetch(url.toString(), { headers: { 'x-admin-password': adminPassword } });
+    const headers = {};
+    if (adminPassword) {
+      url.searchParams.set('view', 'admin');
+      headers['x-admin-password'] = adminPassword;
+    } else {
+      url.searchParams.set('view', consultantName);
+    }
+    const res = await fetch(url.toString(), { headers });
     if (!res.ok) {
       // 404 before first cron sync is normal; don't treat as app error.
       if (!opts.silent && res.status !== 404) {
@@ -545,6 +554,11 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
     const body = await res.json().catch(() => ({}));
     const cachedTickets = Array.isArray(body.tickets) ? body.tickets : [];
 
+    // Ensure Freshdesk agent IDs are loaded before checking reassignment
+    if (!state.fdAgentsLoaded && hasFreshdeskAuthAvailable()) {
+      await loadFreshdeskAgents();
+    }
+
     // Re-match cached tickets against current state.authors (may include newly imported authors)
     cachedTickets.forEach(t => {
       const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
@@ -552,7 +566,12 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
         t.isMatched = true;
         t.matchedAuthor = author.name;
         t.matchedConsultant = author.consultant;
+      } else {
+        t.isMatched = false;
+        t.matchedAuthor = null;
+        t.matchedConsultant = null;
       }
+      t.needsReassign = false;
       // Re-check needsReassign against current agent map
       if (t.isMatched && t.matchedConsultant) {
         const c = CONSULTANTS.find(c2 => c2.name === t.matchedConsultant);
@@ -583,11 +602,16 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
     if (opts.refreshUI !== false) {
       refreshUI();
     }
+    const needsAssignCount = state.tickets.filter(t => t.needsReassign).length;
     if (cachedTickets.length && !opts.silent) {
-      showFdStatus(`Loaded ${cachedTickets.length} cached tickets from server sync.`, 'info');
+      showFdStatus(`Loaded ${cachedTickets.length} cached tickets from server sync.${needsAssignCount ? ` ${needsAssignCount} need reassignment.` : ''}`, 'info');
     }
     if (state.currentView === 'admin') {
       refreshFreshdeskServerSyncStatus({ adminPassword, silent: true }).catch(() => {});
+    }
+    // Auto-reassign tickets whose author is already assigned to a consultant
+    if (needsAssignCount > 0 && hasFreshdeskAuthAvailable()) {
+      autoAssignFreshdeskTickets();
     }
     return true;
   } catch (err) {
@@ -752,9 +776,9 @@ async function fetchFreshdeskTickets(opts = {}) {
     if (dom.ticketsSection) dom.ticketsSection.classList.remove('hidden');
     refreshUI();
 
-    // Keep writes explicit: auto-refresh/manual sync should not auto-assign on Freshdesk.
-    if (needsAssign > 0 && opts.trigger === 'manual') {
-      showFdStatus(statusMsg + ' Click "Auto-Assign Tickets" to push reassignment changes to Freshdesk.', 'info');
+    // Auto-reassign tickets whose author is already assigned to a consultant
+    if (needsAssign > 0) {
+      autoAssignFreshdeskTickets();
     }
   } catch (err) {
     if (err && (err.status === 429 || String(err.message || '').includes('429'))) {
@@ -1369,7 +1393,7 @@ function exportCSV() {
       a.filesGenerated?'Yes':'No', a.addressMarketing?'Yes':'No', a.primePlacement?'Yes':'No',
       a.confirmationEmail?'Yes':'No', a.remarks||'', tc]);
   });
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a'); link.href = url; link.download = `assignments_${new Date().toISOString().split('T')[0]}.csv`; link.click();
@@ -1417,6 +1441,26 @@ function switchView(view) {
     if (isAdmin) refreshFreshdeskServerSyncStatus({ silent: true }).catch(() => {});
   }
 
+  // Reorder sections: consultant view puts tickets right after stats, callbacks at end
+  const mainEl = document.querySelector('main');
+  const statsSection = document.getElementById('stats');
+  const callbackSection = document.getElementById('callback-section');
+  const assignmentsSection = document.getElementById('assignments-section');
+  if (mainEl && dom.ticketsSection && statsSection) {
+    if (!isAdmin) {
+      // Move tickets section right after stats
+      statsSection.after(dom.ticketsSection);
+      // Move callbacks to end (before footer, i.e. last child of main)
+      if (callbackSection) mainEl.appendChild(callbackSection);
+    } else {
+      // Restore original order: tickets at end, callbacks before assignments
+      mainEl.appendChild(dom.ticketsSection);
+      if (callbackSection && assignmentsSection) {
+        assignmentsSection.before(callbackSection);
+      }
+    }
+  }
+
   refreshUI();
 }
 
@@ -1437,7 +1481,7 @@ function updateStats() {
     // Team view: show open tickets count + need reply count
     const viewEmails = authors.map(a => a.email.toLowerCase());
     const myTickets = state.tickets.filter(t => viewEmails.includes(t.requesterEmail));
-    const openTickets = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3).length;
+    const openTickets = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6).length;
     dom.statTickets.textContent = openTickets;
     // Update labels for team view
     const statAuthorsCard = document.querySelector('#stat-authors')?.closest('.stat-card')?.querySelector('.stat-label');
@@ -1448,7 +1492,7 @@ function updateStats() {
     if (statAssignedCard) statAssignedCard.textContent = 'Need Reply';
     // "Need Reply" = authors with open/pending tickets
     const authorsNeedReply = authors.filter(a => {
-      return myTickets.some(t => t.requesterEmail === a.email.toLowerCase() && (t.statusCode === 2 || t.statusCode === 3));
+      return myTickets.some(t => t.requesterEmail === a.email.toLowerCase() && (t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6));
     }).length;
     dom.statAssigned.textContent = authorsNeedReply;
   } else {
@@ -1493,7 +1537,7 @@ function renderTable() {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
       const authorTickets = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase());
       const tix = authorTickets.length;
-      const hasOpenTicket = authorTickets.some(t => t.statusCode === 2 || t.statusCode === 3);
+      const hasOpenTicket = authorTickets.some(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6);
       const latestTicket = authorTickets.length > 0 ? authorTickets[0] : null;
 
       // Ticket badge with status
@@ -1501,10 +1545,12 @@ function renderTable() {
       if (tix > 0) {
         const openCount = authorTickets.filter(t => t.statusCode === 2).length;
         const pendCount = authorTickets.filter(t => t.statusCode === 3).length;
+        const waitCount = authorTickets.filter(t => t.statusCode === 6 || t.statusCode === 7).length;
         const resCount = authorTickets.filter(t => t.statusCode === 4 || t.statusCode === 5).length;
         let parts = [];
         if (openCount) parts.push(`<span class="badge fd-status-open">${openCount} Open</span>`);
         if (pendCount) parts.push(`<span class="badge fd-status-pending">${pendCount} Pending</span>`);
+        if (waitCount) parts.push(`<span class="badge fd-status-waiting">${waitCount} Waiting</span>`);
         if (resCount) parts.push(`<span class="badge fd-status-resolved">${resCount} Resolved</span>`);
         tBadge = parts.join(' ');
       } else {
@@ -1514,7 +1560,7 @@ function renderTable() {
       // Action (team view): only allow replying to open/pending Freshdesk tickets
       let actionBtn;
       if (latestTicket && hasOpenTicket) {
-        const openTicket = authorTickets.find(t => t.statusCode === 2 || t.statusCode === 3);
+        const openTicket = authorTickets.find(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6);
         actionBtn = `<a href="https://${FD_DOMAIN}/a/tickets/${openTicket.id}" target="_blank" class="btn btn-sm btn-primary">Reply on FD</a>`;
       } else {
         actionBtn = `<span class="muted">No open FD ticket</span>`;
@@ -1547,7 +1593,7 @@ function renderTable() {
 
     dom.tbody.innerHTML = rows.map(a => {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
-      const conOpts = CONSULTANTS.map(c => `<option value="${c.name}" ${a.consultant === c.name ? 'selected' : ''}>${c.name}${c.active ? '' : ' (Left)'}</option>`).join('');
+      const conOpts = CONSULTANTS.map(c => `<option value="${c.name}" ${a.consultant === c.name ? 'selected' : ''}>${c.name}${c.active ? '' : ' (Resigned)'}</option>`).join('');
       const tix = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase()).length;
       const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">—</span>';
 
@@ -1595,7 +1641,7 @@ function renderWorkload() {
     const pending = assigned.filter(a => a.status === 'assigned').length;
     const emails = assigned.map(a => a.email.toLowerCase());
     const myTickets = state.tickets.filter(t => emails.includes(t.requesterEmail));
-    const openTix = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3).length;
+    const openTix = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6).length;
     const resolvedTix = myTickets.filter(t => t.statusCode === 4 || t.statusCode === 5).length;
     const trackerCount = getTrackerCountByConsultant(c.name);
 
@@ -1649,6 +1695,7 @@ function renderTickets() {
   if (dom.ticketsSection) dom.ticketsSection.classList.remove('hidden');
   const search = (dom.ticketSearch.value || '').toLowerCase();
   const mf = dom.ticketFilterMatch.value;
+  const sf = dom.ticketFilterStatus ? dom.ticketFilterStatus.value : 'all';
   let rows = state.tickets;
   // In team view, only show tickets for this consultant's authors
   if (state.currentView !== 'admin') {
@@ -1656,12 +1703,14 @@ function renderTickets() {
     rows = rows.filter(t => viewEmails.includes(t.requesterEmail));
   }
   if (search) rows = rows.filter(t => t.subject.toLowerCase().includes(search) || t.requesterEmail.includes(search) || (t.matchedAuthor && t.matchedAuthor.toLowerCase().includes(search)));
+  if (sf === 'waiting') rows = rows.filter(t => (t.status || '').toLowerCase().startsWith('waiting'));
+  else if (sf !== 'all') rows = rows.filter(t => (t.status || '').toLowerCase() === sf);
   if (mf === 'matched') rows = rows.filter(t => t.isMatched);
   if (mf === 'unmatched') rows = rows.filter(t => !t.isMatched);
   if (!rows.length) { dom.ticketsBody.innerHTML = '<tr class="empty-row"><td colspan="7">No tickets.</td></tr>'; return; }
   dom.ticketsBody.innerHTML = rows.map(t => {
     const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
-    const sc = `fd-status-${t.status.toLowerCase()}`;
+    const sc = `fd-status-${(t.status || '').toLowerCase().replace(/\s+/g, '-')}`;
     const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
     return `<tr>
       <td><a href="https://${FD_DOMAIN}/a/tickets/${t.id}" target="_blank" class="ticket-link">#${t.id}</a></td>
@@ -1682,7 +1731,7 @@ function toggleButtons() {
 
 function showStatus(m, t) { dom.apiStatus.textContent = m; dom.apiStatus.className = `status-msg status-${t}`; dom.apiStatus.classList.remove('hidden'); clearTimeout(showStatus._t); showStatus._t = setTimeout(() => dom.apiStatus.classList.add('hidden'), 8000); }
 function showFdStatus(m, t) { dom.fdStatus.textContent = m; dom.fdStatus.className = `status-msg status-${t}`; dom.fdStatus.classList.remove('hidden'); clearTimeout(showFdStatus._t); showFdStatus._t = setTimeout(() => dom.fdStatus.classList.add('hidden'), 10000); }
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML.replace(/'/g, '&#39;'); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML.replace(/'/g, '&#39;').replace(/"/g, '&quot;'); }
 function getTrackerCountByConsultant(name) {
   if (state.trackerCounts && Number.isFinite(Number(state.trackerCounts[name]))) {
     return Number(state.trackerCounts[name]);
@@ -2033,7 +2082,7 @@ function notifyNewTickets(count) {
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     new Notification('Bookleaf Tracker', {
       body: `${count} new Freshdesk ticket${count > 1 ? 's' : ''} received!`,
-      icon: 'https://shivangi437.github.io/bookleaf-tracker/favicon.ico',
+      icon: `${location.origin}/favicon.ico`,
     });
   }
   // Also flash the page title briefly
@@ -2117,6 +2166,7 @@ if (dom.fdRefreshInterval) {
   });
 }
 dom.ticketSearch.addEventListener('input', renderTickets);
+if (dom.ticketFilterStatus) dom.ticketFilterStatus.addEventListener('change', renderTickets);
 dom.ticketFilterMatch.addEventListener('change', renderTickets);
 dom.btnLoadTracker.addEventListener('click', loadTrackerCSV);
 if (dom.btnLoadTrackerSheet) dom.btnLoadTrackerSheet.addEventListener('click', loadTrackerSheetUrl);
@@ -2145,6 +2195,8 @@ dom.identitySelect.addEventListener('change', async e => {
       if (state.dataScope !== 'consultant' || state.currentView !== view) {
         await loadScopeData(view);
       }
+      // Load cached tickets for consultant view
+      await loadFreshdeskTicketCacheFromServer({ consultant: view, silent: true, force: true });
     }
     switchView(view);
   } catch (err) {
@@ -2343,6 +2395,7 @@ async function bootstrapTrackerMode() {
       dom.identitySelect.value = fallback;
       state.adminUnlocked = false;
       await loadScopeData(fallback);
+      await loadFreshdeskTicketCacheFromServer({ consultant: fallback, silent: false, refreshUI: true });
       switchView(fallback);
       return;
     }
@@ -2359,6 +2412,8 @@ async function bootstrapTrackerMode() {
   state.adminUnlocked = false;
   dom.identitySelect.value = requestedView;
   await loadScopeData(requestedView);
+  // Load cached Freshdesk tickets for consultant view so they can see their authors' tickets
+  await loadFreshdeskTicketCacheFromServer({ consultant: requestedView, silent: false, refreshUI: true });
   switchView(requestedView);
 }
 
@@ -2418,10 +2473,29 @@ function loadPreBuiltAuthors(authorsData, opts = {}) {
     };
   });
   state.rrIndex = rrIdx;
+
+  // Reassign authors from resigned consultants to their designated replacements (date-gated)
+  let resignedReassigned = 0;
+  const resignedCounters = {};
+  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  state.authors.forEach(a => {
+    const rule = RESIGNED_REASSIGN[a.consultant];
+    if (rule && rule.targets && rule.targets.length && todayStr >= rule.after) {
+      const fromName = a.consultant;
+      if (!resignedCounters[fromName]) resignedCounters[fromName] = 0;
+      a.consultant = rule.targets[resignedCounters[fromName] % rule.targets.length];
+      resignedCounters[fromName]++;
+      resignedReassigned++;
+    }
+  });
+
   if (cutoff) {
-    console.log(`Auto-loaded ${state.authors.length} authors (${reassigned} reassigned after ${cutoffRaw})`);
+    console.log(`Auto-loaded ${state.authors.length} authors (${reassigned} reassigned after ${cutoffRaw}${resignedReassigned ? `, ${resignedReassigned} from resigned consultants` : ''})`);
   } else {
-    console.log(`Auto-loaded ${state.authors.length} authors`);
+    console.log(`Auto-loaded ${state.authors.length} authors${resignedReassigned ? ` (${resignedReassigned} from resigned consultants)` : ''}`);
+  }
+  if (resignedReassigned > 0) {
+    setTimeout(() => queueAuthorsRuntimeSnapshotPersist(), 1000);
   }
   refreshUI();
 }

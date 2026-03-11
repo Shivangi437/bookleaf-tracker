@@ -28,7 +28,7 @@
             <option value="admin">All Authors (Admin)</option>
             <option value="Vandana">Vandana Pradhan</option>
             <option value="Sapna">Sapna Kumari</option>
-            <option value="Tannu">Tannu Tiwari</option>
+            <option value="Tannu">Tannu Tiwari (Resigned)</option>
             <option value="Roosha">Roosha</option>
             <option value="Firdaus">Firdaus (Resigned)</option>
           </select>
@@ -137,7 +137,7 @@
           <option value="all">All Consultants</option>
           <option value="Vandana">Vandana</option>
           <option value="Sapna">Sapna</option>
-          <option value="Tannu">Tannu</option>
+          <option value="Tannu">Tannu (Resigned)</option>
           <option value="Roosha">Roosha</option>
           <option value="Firdaus">Firdaus (Resigned)</option>
         </select>
@@ -240,7 +240,7 @@
                   <select id="tracker-consultant" class="filter-select">
                     <option value="Vandana">Vandana</option>
                     <option value="Sapna">Sapna</option>
-                    <option value="Tannu">Tannu</option>
+                    <option value="Tannu">Tannu (Resigned)</option>
                     <option value="Roosha">Roosha</option>
                     <option value="Firdaus">Firdaus</option>
                   </select>
@@ -323,6 +323,14 @@
       <h2>Freshdesk Tickets – Author Matches</h2>
       <div class="table-controls">
         <input type="text" id="ticket-search" placeholder="Search tickets..." class="search-input">
+        <select id="ticket-filter-status" class="filter-select">
+          <option value="all">All Statuses</option>
+          <option value="open">Open</option>
+          <option value="pending">Pending</option>
+          <option value="waiting">Waiting</option>
+          <option value="resolved">Resolved</option>
+          <option value="closed">Closed</option>
+        </select>
         <select id="ticket-filter-match" class="filter-select">
           <option value="all">All Tickets</option>
           <option value="matched">Matched</option>

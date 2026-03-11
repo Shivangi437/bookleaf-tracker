@@ -412,6 +412,8 @@ tbody tr:hover { background: rgba(232,100,120,0.03); }
 .fd-status-pending { background: #fef3c7; color: var(--warning); }
 .fd-status-resolved { background: #dcfce7; color: var(--success); }
 .fd-status-closed { background: #e5e7eb; color: var(--text-muted); }
+.fd-status-waiting { background: #fef3c7; color: #b45309; }
+.fd-status-waiting-3p { background: #e0e7ff; color: #4338ca; }
 
 /* Ticket link */
 .ticket-link { color: var(--primary); text-decoration: none; font-weight: 700; }
