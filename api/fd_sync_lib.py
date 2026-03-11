@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 
 
 FD_DOMAIN = "bookleafpublishing.freshdesk.com"
-FD_STATUS = {2: "Open", 3: "Pending", 4: "Resolved", 5: "Closed"}
+FD_STATUS = {2: "Open", 3: "Pending", 4: "Resolved", 5: "Closed", 6: "Waiting", 7: "Waiting-3P"}
 FD_CACHE_KEY = "bookleaf:fd_cache:v1"
 FD_CACHE_TTL_SECONDS = 60 * 60 * 24 * 2  # 48h
 DATA_DIR = Path(__file__).resolve().parent / "_data"
