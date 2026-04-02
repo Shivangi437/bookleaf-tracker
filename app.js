@@ -582,9 +582,13 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
         t.isMatched = false;
         t.matchedAuthor = null;
       }
-      t.matchedConsultant = DEFAULT_FD_RESPONDER.name; // ALL tickets → Sapna
+      t.matchedConsultant = author ? author.consultant : null;
       t.isMerged = Array.isArray(t.tags) && t.tags.includes(MERGE_TAG);
-      t.needsReassign = !!(DEFAULT_FD_RESPONDER.freshdeskAgentId && DEFAULT_FD_RESPONDER.freshdeskAgentId !== t.currentAssignee);
+      t.needsReassign = false;
+      if (t.isMatched && t.matchedConsultant) {
+        const c = CONSULTANTS.find(c2 => c2.name === t.matchedConsultant);
+        if (c && c.freshdeskAgentId && c.freshdeskAgentId !== t.currentAssignee) t.needsReassign = true;
+      }
     });
     state.tickets = cachedTickets;
 
@@ -749,17 +753,18 @@ async function fetchFreshdeskTickets(opts = {}) {
       return {
         id: t.id, subject: t.subject || '(No subject)', requesterEmail: email,
         matchedAuthor: author ? author.name : null,
-        matchedConsultant: DEFAULT_FD_RESPONDER.name, // ALL tickets → Sapna
+        matchedConsultant: author ? author.consultant : null,
         currentAssignee: t.responder_id, status: FD_STATUS[t.status] || `Status ${t.status}`,
         statusCode: t.status, isMatched: !!author, needsReassign: false,
         isMerged, tags,
       };
     });
 
-    // ALL tickets should be assigned to Sapna (default responder)
+    // Check needsReassign only for matched authors whose consultant has a different FD agent
     state.tickets.forEach(t => {
-      if (DEFAULT_FD_RESPONDER.freshdeskAgentId && DEFAULT_FD_RESPONDER.freshdeskAgentId !== t.currentAssignee) {
-        t.needsReassign = true;
+      if (t.isMatched && t.matchedConsultant) {
+        const c = CONSULTANTS.find(c2 => c2.name === t.matchedConsultant);
+        if (c && c.freshdeskAgentId && c.freshdeskAgentId !== t.currentAssignee) t.needsReassign = true;
       }
     });
 
@@ -810,13 +815,13 @@ async function autoAssignFreshdeskTickets() {
   showFdStatus(`Assigning ${toAssign.length} tickets...`, 'info');
   let success = 0, failed = 0;
   let delay = 200; // start with 200ms, increase on 429
-  const defaultAgent = DEFAULT_FD_RESPONDER;
-  if (!defaultAgent || !defaultAgent.freshdeskAgentId) { showFdStatus('Default responder (Sapna) not configured.', 'error'); return; }
   for (const ticket of toAssign) {
+    const c = CONSULTANTS.find(c2 => c2.name === ticket.matchedConsultant);
+    if (!c || !c.freshdeskAgentId) { failed++; continue; }
     let retries = 0;
     while (retries < 3) {
       try {
-        const res = await fetch(fdUrl(`tickets/${ticket.id}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: defaultAgent.freshdeskAgentId }) });
+        const res = await fetch(fdUrl(`tickets/${ticket.id}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
         if (res.status === 429) {
           const retryAfter = getRetryAfterSeconds(res);
           delay = Math.max(delay * 2, (retryAfter || 30) * 1000);
@@ -825,7 +830,7 @@ async function autoAssignFreshdeskTickets() {
           await new Promise(r => setTimeout(r, delay));
           continue;
         }
-        if (res.ok) { ticket.currentAssignee = defaultAgent.freshdeskAgentId; ticket.needsReassign = false; success++; } else failed++;
+        if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; success++; } else failed++;
         break;
       } catch { failed++; break; }
     }
@@ -842,9 +847,9 @@ async function autoAssignFreshdeskTickets() {
 
 async function assignSingleTicket(ticketId) {
   const ticket = state.tickets.find(t => t.id === ticketId);
-  if (!ticket) return;
-  const c = DEFAULT_FD_RESPONDER;
-  if (!c || !c.freshdeskAgentId) { showFdStatus('Default responder not configured.', 'error'); return; }
+  if (!ticket || !ticket.matchedConsultant) return;
+  const c = CONSULTANTS.find(c2 => c2.name === ticket.matchedConsultant);
+  if (!c || !c.freshdeskAgentId) { showFdStatus(`${ticket.matchedConsultant} not linked.`, 'error'); return; }
   try {
     const res = await fetch(fdUrl(`tickets/${ticketId}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
     if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} → ${c.name}`, 'success'); refreshUI(); }
@@ -855,8 +860,9 @@ async function assignSingleTicket(ticketId) {
 async function assignTicketsByEmail(email) {
   const toAssign = state.tickets.filter(t => t.requesterEmail === email && t.needsReassign);
   if (toAssign.length === 0) { showFdStatus('No tickets need reassignment for this author.', 'info'); return; }
-  const c = DEFAULT_FD_RESPONDER;
-  if (!c || !c.freshdeskAgentId) { showFdStatus('Default responder not configured.', 'error'); return; }
+  const consultant = toAssign[0].matchedConsultant;
+  const c = CONSULTANTS.find(c2 => c2.name === consultant);
+  if (!c || !c.freshdeskAgentId) { showFdStatus(`${consultant} not linked to Freshdesk.`, 'error'); return; }
   showFdStatus(`Assigning ${toAssign.length} tickets for ${email} → ${c.name}...`, 'info');
   let success = 0, failed = 0;
   for (const ticket of toAssign) {
@@ -1957,7 +1963,7 @@ function renderTickets() {
 function renderTicketRow(t, indented, groupEmail) {
   const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
   const sc = `fd-status-${(t.status || '').toLowerCase().replace(/\s+/g, '-')}`;
-  const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ Sapna</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
+  const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
   const mergedBadge = t.isMerged ? ' <span class="badge badge-merged" title="Auto-merged duplicate">Merged</span>' : '';
   const groupAttr = groupEmail ? ` data-ticket-group="${esc(groupEmail)}"` : '';
   return `<tr class="${indented ? 'ticket-group-child' : ''}"${groupAttr}>
