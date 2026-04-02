@@ -1,9 +1,9 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 const CONSULTANTS = [
-  { id: 'c-1', name: 'Vandana', fullName: 'Vandana Pradhan', email: 'vandana@bookleafpub.in', freshdeskAgentId: null, active: true },
-  { id: 'c-2', name: 'Sapna',   fullName: 'Sapna Kumari',    email: 'sapna@bookleafpub.in',   freshdeskAgentId: null, active: true },
+  { id: 'c-1', name: 'Vandana', fullName: 'Vandana Pradhan', email: 'vandana@bookleafpub.in', freshdeskAgentId: 82219721043, active: true },
+  { id: 'c-2', name: 'Sapna',   fullName: 'Sapna Kumari',    email: 'sapna@bookleafpub.in',   freshdeskAgentId: 82227997294, active: true },
   { id: 'c-3', name: 'Tannu',   fullName: 'Tannu Tiwari',    email: 'tannu@bookleafpub.in',   freshdeskAgentId: null, active: false },
-  { id: 'c-4', name: 'Roosha',  fullName: 'Roosha',           email: 'roosha@bookleafpub.in',  freshdeskAgentId: null, active: true },
+  { id: 'c-4', name: 'Roosha',  fullName: 'Roosha',           email: 'roosha@bookleafpub.in',  freshdeskAgentId: 82230817180, active: true },
   { id: 'c-5', name: 'Firdaus', fullName: 'Firdaus',          email: '',                        freshdeskAgentId: null, active: false },
 ];
 
@@ -40,7 +40,10 @@ const STAGES = [
 ];
 
 const DEFAULT_REASSIGN_CUTOFF = '2026-02-17'; // YYYY-MM-DD (IST business cutoff)
-const RESIGNED_REASSIGN = { 'Tannu': { targets: ['Sapna', 'Vandana'], after: '2026-03-23' } };
+const RESIGNED_REASSIGN = {
+  'Tannu':   { targets: ['Sapna'], after: '2026-03-23' },
+  'Firdaus': { targets: ['Sapna'], after: '2026-01-01' },
+};
 const IS_BOOKING_MODE = new URLSearchParams(window.location.search).get('book') === 'true';
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -69,6 +72,7 @@ const state = {
   loadedTrackers: [],    // which consultant trackers have been loaded
   currentView: 'admin',  // 'admin' or consultant name
   adminUnlocked: true,   // starts as admin; lock when switching away
+  collapsedTicketGroups: {},  // email -> true/false for collapsed state
 };
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -118,6 +122,11 @@ const dom = {
   cbDatetime: $id('cb-datetime'), cbNotes: $id('cb-notes'),
   cbAuthorMatch: $id('cb-author-match'), cbAuthorList: $id('cb-author-list'),
   btnCbSave: $id('btn-cb-save'), btnCbCancel: $id('btn-cb-cancel'),
+  // Add Author
+  addAuthorModal: $id('add-author-modal'), aaName: $id('aa-name'), aaEmail: $id('aa-email'),
+  aaPhone: $id('aa-phone'), aaPackage: $id('aa-package'), aaConsultant: $id('aa-consultant'),
+  aaDate: $id('aa-date'), aaRemarks: $id('aa-remarks'),
+  btnAaSave: $id('btn-aa-save'), btnAaCancel: $id('btn-aa-cancel'), btnAddAuthor: $id('btn-add-author'),
 };
 
 // ── Full-Stack State Persistence API ─────────────────────────────────────────
@@ -561,7 +570,7 @@ async function loadFreshdeskTicketCacheFromServer(opts = {}) {
 
     // Re-match cached tickets against current state.authors (may include newly imported authors)
     cachedTickets.forEach(t => {
-      const author = state.authors.find(a => a.email.toLowerCase() === t.requesterEmail);
+      const author = state.authors.find(a => (a.email || '').toLowerCase() === t.requesterEmail);
       if (author) {
         t.isMatched = true;
         t.matchedAuthor = author.name;
@@ -691,7 +700,7 @@ function handleFreshdeskRateLimit(retryAfterSec) {
   const mins = retryAfterSec ? Math.max(1, Math.ceil(retryAfterSec / 60)) : null;
   if (dom.fdAutoRefresh && dom.fdAutoRefresh.checked) {
     state.fdAutoRefreshWasEnabledBefore429 = true;
-    dom.fdAutoRefresh.checked = false;
+    if (dom.fdAutoRefresh) dom.fdAutoRefresh.checked = false;
   }
   stopFdAutoRefresh();
   persistFreshdeskPrefs();
@@ -737,7 +746,7 @@ async function fetchFreshdeskTickets(opts = {}) {
 
     state.tickets = allTickets.map(t => {
       const email = (t.requester ? t.requester.email : (t.email || '')).toLowerCase().trim();
-      const author = state.authors.find(a => a.email.toLowerCase() === email);
+      const author = state.authors.find(a => (a.email || '').toLowerCase() === email);
       return {
         id: t.id, subject: t.subject || '(No subject)', requesterEmail: email,
         matchedAuthor: author ? author.name : null, matchedConsultant: author ? author.consultant : null,
@@ -800,24 +809,34 @@ async function autoAssignFreshdeskTickets() {
   if (toAssign.length === 0) { showFdStatus('No tickets need reassignment.', 'info'); return; }
   showFdStatus(`Assigning ${toAssign.length} tickets...`, 'info');
   let success = 0, failed = 0;
-  let stoppedByRateLimit = false;
+  let delay = 200; // start with 200ms, increase on 429
   for (const ticket of toAssign) {
     const c = CONSULTANTS.find(c2 => c2.name === ticket.matchedConsultant);
     if (!c || !c.freshdeskAgentId) { failed++; continue; }
-    try {
-      const res = await fetch(fdUrl(`tickets/${ticket.id}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
-      if (res.status === 429) {
-        handleFreshdeskRateLimit(getRetryAfterSeconds(res));
-        stoppedByRateLimit = true;
+    let retries = 0;
+    while (retries < 3) {
+      try {
+        const res = await fetch(fdUrl(`tickets/${ticket.id}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
+        if (res.status === 429) {
+          const retryAfter = getRetryAfterSeconds(res);
+          delay = Math.max(delay * 2, (retryAfter || 30) * 1000);
+          retries++;
+          showFdStatus(`Rate limited — waiting ${Math.round(delay / 1000)}s before retry (${success} assigned so far)...`, 'info');
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; success++; } else failed++;
         break;
-      }
-      if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; success++; } else failed++;
-      await new Promise(r => setTimeout(r, 200));
-    } catch { failed++; }
+      } catch { failed++; break; }
+    }
+    if (retries >= 3) {
+      handleFreshdeskRateLimit(Math.round(delay / 1000));
+      break;
+    }
+    await new Promise(r => setTimeout(r, delay));
   }
-  if (stoppedByRateLimit) return;
   showFdStatus(`Done! ${success} assigned${failed > 0 ? `, ${failed} failed` : ''}.`, success > 0 ? 'success' : 'error');
-  if (dom.btnFdAutoAssign) dom.btnFdAutoAssign.disabled = true;
+  if (dom.btnFdAutoAssign) dom.btnFdAutoAssign.disabled = state.tickets.filter(t => t.needsReassign).length === 0;
   refreshUI();
 }
 
@@ -831,6 +850,155 @@ async function assignSingleTicket(ticketId) {
     if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; showFdStatus(`#${ticketId} → ${c.name}`, 'success'); refreshUI(); }
     else showFdStatus(`Failed #${ticketId}`, 'error');
   } catch (err) { showFdStatus(`Error: ${err.message}`, 'error'); }
+}
+
+async function assignTicketsByEmail(email) {
+  const toAssign = state.tickets.filter(t => t.requesterEmail === email && t.needsReassign);
+  if (toAssign.length === 0) { showFdStatus('No tickets need reassignment for this author.', 'info'); return; }
+  const consultant = toAssign[0].matchedConsultant;
+  const c = CONSULTANTS.find(c2 => c2.name === consultant);
+  if (!c || !c.freshdeskAgentId) { showFdStatus(`${consultant} not linked to Freshdesk.`, 'error'); return; }
+  showFdStatus(`Assigning ${toAssign.length} tickets for ${email}...`, 'info');
+  let success = 0, failed = 0;
+  for (const ticket of toAssign) {
+    try {
+      const res = await fetch(fdUrl(`tickets/${ticket.id}`), { method: 'PUT', headers: fdHeaders(), body: JSON.stringify({ responder_id: c.freshdeskAgentId }) });
+      if (res.status === 429) { handleFreshdeskRateLimit(getRetryAfterSeconds(res)); if (success > 0) refreshUI(); return; }
+      if (res.ok) { ticket.currentAssignee = c.freshdeskAgentId; ticket.needsReassign = false; success++; } else failed++;
+      await new Promise(r => setTimeout(r, 200));
+    } catch { failed++; }
+  }
+  showFdStatus(`${email}: ${success} assigned${failed > 0 ? `, ${failed} failed` : ''}.`, success > 0 ? 'success' : 'error');
+  refreshUI();
+}
+
+function toggleTicketGroup(email) {
+  state.collapsedTicketGroups[email] = !state.collapsedTicketGroups[email];
+  renderTickets();
+}
+
+function scrollToTicketGroup(email) {
+  // Ensure tickets section is visible
+  const section = dom.ticketsSection;
+  if (section) section.classList.remove('hidden');
+  // Expand the group if collapsed
+  if (state.collapsedTicketGroups[email]) {
+    state.collapsedTicketGroups[email] = false;
+  }
+  // Clear ticket filters to ensure visibility
+  if (dom.ticketSearch) dom.ticketSearch.value = '';
+  if (dom.ticketFilterMatch) dom.ticketFilterMatch.value = 'all';
+  if (dom.ticketFilterStatus) dom.ticketFilterStatus.value = 'all';
+  renderTickets();
+  // Scroll to the group header
+  setTimeout(() => {
+    const groupRow = document.querySelector(`[data-ticket-group="${CSS.escape(email)}"]`);
+    if (groupRow) {
+      groupRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Remove then re-add class to restart animation even on rapid clicks
+      groupRow.classList.remove('highlight-row');
+      void groupRow.offsetWidth; // force reflow
+      groupRow.classList.add('highlight-row');
+      clearTimeout(scrollToTicketGroup._ht);
+      scrollToTicketGroup._ht = setTimeout(() => groupRow.classList.remove('highlight-row'), 2500);
+    }
+  }, 100);
+}
+
+// ── Bubble API (dashboard.bookleafpub.in) ────────────────────────────────────
+const BUBBLE_API_BASE = 'https://dashboard.bookleafpub.in/api/1.1';
+const BUBBLE_API_KEY = '8fa412098df1854f20b7607ec869e4d8';
+
+function bubbleHeaders() {
+  return { 'Authorization': `Bearer ${BUBBLE_API_KEY}`, 'Content-Type': 'application/json' };
+}
+
+function showBubbleStatus(m, t) {
+  const el = document.getElementById('bubble-status');
+  if (!el) return;
+  el.textContent = m; el.className = `status-msg status-${t}`; el.classList.remove('hidden');
+  clearTimeout(showBubbleStatus._t);
+  showBubbleStatus._t = setTimeout(() => el.classList.add('hidden'), 12000);
+}
+
+async function fetchBubbleBooks(cursor = 0, all = []) {
+  const limit = 100;
+  const res = await fetch(`${BUBBLE_API_BASE}/obj/book?limit=${limit}&cursor=${cursor}&sort_field=Modified+Date&descending=true`, { headers: bubbleHeaders() });
+  if (!res.ok) throw new Error(`Bubble API: ${res.status}`);
+  const data = await res.json();
+  const items = data.response.results || [];
+  all = all.concat(items);
+  const remaining = data.response.remaining || 0;
+  if (remaining > 0 && items.length === limit) {
+    showBubbleStatus(`Fetching books... ${all.length} loaded, ${remaining} remaining`, 'info');
+    await new Promise(r => setTimeout(r, 200));
+    return fetchBubbleBooks(cursor + limit, all);
+  }
+  return all;
+}
+
+async function fetchBubbleUsers(cursor = 0, all = []) {
+  const limit = 100;
+  const res = await fetch(`${BUBBLE_API_BASE}/obj/user?limit=${limit}&cursor=${cursor}`, { headers: bubbleHeaders() });
+  if (!res.ok) throw new Error(`Bubble Users API: ${res.status}`);
+  const data = await res.json();
+  const items = data.response.results || [];
+  all = all.concat(items);
+  const remaining = data.response.remaining || 0;
+  if (remaining > 0 && items.length === limit) {
+    return fetchBubbleUsers(cursor + limit, all);
+  }
+  return all;
+}
+
+async function syncFromBubble() {
+  const btn = document.getElementById('btn-bubble-sync');
+  if (btn) btn.disabled = true;
+  showBubbleStatus('Connecting to Bubble...', 'info');
+  try {
+    const books = await fetchBubbleBooks();
+    showBubbleStatus(`${books.length} books fetched. Matching with authors...`, 'info');
+
+    // Build email lookup from books (author_name + book fields)
+    state.bubbleBooks = books;
+    let matched = 0, enriched = 0;
+
+    // Match books to tracker authors by author_name or email
+    state.authors.forEach(a => {
+      const email = (a.email || '').toLowerCase().trim();
+      const name = (a.name || '').toLowerCase().trim();
+      // Match by author email or name
+      const authorBooks = books.filter(b => {
+        const bName = (b.author_name || '').toLowerCase().trim();
+        return bName === name || bName.replace(/\s+/g, '_') === name.replace(/\s+/g, '_');
+      });
+      if (authorBooks.length > 0) {
+        matched++;
+        a.bubbleBooks = authorBooks.map(b => ({
+          id: b._id,
+          title: b.title || '(Untitled)',
+          status: b.status || 'Unknown',
+          plan: b.choosen_plan || 'Free',
+          amazonLink: b.amazon_link && b.amazon_link !== 'Empty' ? b.amazon_link : null,
+          flipkartLink: b.flipkart_link && b.flipkart_link !== 'Empty' ? b.flipkart_link : null,
+          bookleafLink: b.bookleaf_bookstore_link && b.bookleaf_bookstore_link !== 'Empty' ? b.bookleaf_bookstore_link : null,
+          pages: b['#_pages'] || 0,
+          genre: b.genre || '',
+          coverUrl: b.cover_url || null,
+          modifiedDate: b['Modified Date'] || null,
+        }));
+        enriched += authorBooks.length;
+      }
+    });
+
+    showBubbleStatus(`Sync complete! ${books.length} books found, ${matched} authors matched (${enriched} books linked).`, 'success');
+    state.bubbleLastSync = new Date().toISOString();
+    refreshUI();
+  } catch (err) {
+    showBubbleStatus(`Error: ${err.message}`, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ── Razorpay API ─────────────────────────────────────────────────────────────
@@ -930,7 +1098,7 @@ async function fetchRazorpayPayments() {
       const existing = state.existingMap[email];
 
       // Check if already in current authors list
-      const alreadyLoaded = state.authors.find(a => a.email.toLowerCase() === email);
+      const alreadyLoaded = state.authors.find(a => (a.email || '').toLowerCase() === email);
       if (alreadyLoaded) return null; // skip duplicates
 
       let consultant, status, remarks;
@@ -1360,6 +1528,17 @@ function reassign(id, val) {
   const a = state.authors.find(x => x.id === id);
   if (!a) return;
   a.consultant = val;
+  // Update needsReassign on tickets matching this author so FD auto-assign picks up the change
+  const email = (a.email || '').toLowerCase();
+  if (email) {
+    const c = CONSULTANTS.find(c2 => c2.name === val);
+    state.tickets.forEach(t => {
+      if (t.requesterEmail === email) {
+        t.matchedConsultant = val;
+        t.needsReassign = !!(c && c.freshdeskAgentId && c.freshdeskAgentId !== t.currentAssignee);
+      }
+    });
+  }
   syncAuthorToExistingMap(a);
   queueAuthorOverridePersist(a);
   refreshUI();
@@ -1387,7 +1566,7 @@ function updateRemarks(id, val) {
 function exportCSV() {
   const rows = [['Author','Email','Phone','Package','Payment Date','Consultant','Status','Intro Email','Author Response','Follow-up','Marked Yes','Files Generated','Address & Marketing','Prime Placement','Confirmation Email','Remarks','FD Tickets']];
   getViewAuthors().forEach(a => {
-    const tc = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase()).length;
+    const tc = state.tickets.filter(t => t.requesterEmail === (a.email || '').toLowerCase()).length;
     rows.push([a.name, a.email, a.phone, a.package, a.paymentDate, a.consultant, a.status,
       a.introEmail?'Yes':'No', a.authorResponse?'Yes':'No', a.followUp?'Yes':'No', a.markedYes?'Yes':'No',
       a.filesGenerated?'Yes':'No', a.addressMarketing?'Yes':'No', a.primePlacement?'Yes':'No',
@@ -1411,12 +1590,14 @@ function switchView(view) {
   const isAdmin = view === 'admin';
 
   // Update badge
-  if (isAdmin) {
-    dom.identityBadge.textContent = 'Admin View';
-    dom.identityBadge.className = 'identity-badge identity-admin';
-  } else {
-    dom.identityBadge.textContent = `${view}'s Dashboard`;
-    dom.identityBadge.className = 'identity-badge identity-consultant';
+  if (dom.identityBadge) {
+    if (isAdmin) {
+      dom.identityBadge.textContent = 'Admin View';
+      dom.identityBadge.className = 'identity-badge identity-admin';
+    } else {
+      dom.identityBadge.textContent = `${view}'s Dashboard`;
+      dom.identityBadge.className = 'identity-badge identity-consultant';
+    }
   }
 
   // Show/hide admin-only elements
@@ -1433,7 +1614,7 @@ function switchView(view) {
   if (wlH2) wlH2.textContent = isAdmin ? 'Consultant Workload' : 'My Summary';
 
   // In team view, show status filter with ticket-relevant options
-  if (!isAdmin) {
+  if (!isAdmin && dom.filterStatus) {
     dom.filterStatus.innerHTML = '<option value="all">All Statuses</option><option value="assigned">Assigned</option><option value="in-progress">In Progress</option><option value="good-to-go">Good to Go</option><option value="completed">Completed</option>';
   }
   if (dom.fdServerSyncCard) {
@@ -1472,17 +1653,17 @@ function updateStats() {
   const isTeamView = state.currentView !== 'admin';
   const trackerCount = isTeamView ? getTrackerCountByConsultant(state.currentView) : 0;
 
-  dom.statAuthors.textContent = isTeamView ? (trackerCount || authors.length) : authors.length;
-  dom.statIndian.textContent = authors.filter(a => a.packageKey === 'indian').length;
-  dom.statIntl.textContent = authors.filter(a => a.packageKey === 'intl').length;
-  dom.statGood.textContent = authors.filter(a => a.status === 'good-to-go').length;
+  if (dom.statAuthors) dom.statAuthors.textContent = isTeamView ? (trackerCount || authors.length) : authors.length;
+  if (dom.statIndian) dom.statIndian.textContent = authors.filter(a => a.packageKey === 'indian').length;
+  if (dom.statIntl) dom.statIntl.textContent = authors.filter(a => a.packageKey === 'intl').length;
+  if (dom.statGood) dom.statGood.textContent = authors.filter(a => a.status === 'good-to-go').length;
 
   if (isTeamView) {
     // Team view: show open tickets count + need reply count
-    const viewEmails = authors.map(a => a.email.toLowerCase());
+    const viewEmails = authors.map(a => (a.email || '').toLowerCase());
     const myTickets = state.tickets.filter(t => viewEmails.includes(t.requesterEmail));
     const openTickets = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6).length;
-    dom.statTickets.textContent = openTickets;
+    if (dom.statTickets) dom.statTickets.textContent = openTickets;
     // Update labels for team view
     const statAuthorsCard = document.querySelector('#stat-authors')?.closest('.stat-card')?.querySelector('.stat-label');
     const statTicketsCard = document.querySelector('#stat-tickets')?.closest('.stat-card')?.querySelector('.stat-label');
@@ -1492,13 +1673,13 @@ function updateStats() {
     if (statAssignedCard) statAssignedCard.textContent = 'Need Reply';
     // "Need Reply" = authors with open/pending tickets
     const authorsNeedReply = authors.filter(a => {
-      return myTickets.some(t => t.requesterEmail === a.email.toLowerCase() && (t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6));
+      return myTickets.some(t => t.requesterEmail === (a.email || '').toLowerCase() && (t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6));
     }).length;
-    dom.statAssigned.textContent = authorsNeedReply;
+    if (dom.statAssigned) dom.statAssigned.textContent = authorsNeedReply;
   } else {
     // Admin view: standard stats
-    dom.statTickets.textContent = state.tickets.length;
-    dom.statAssigned.textContent = authors.filter(a => a.consultant).length;
+    if (dom.statTickets) dom.statTickets.textContent = state.tickets.length;
+    if (dom.statAssigned) dom.statAssigned.textContent = authors.filter(a => a.consultant).length;
     const statAuthorsCardA = document.querySelector('#stat-authors')?.closest('.stat-card')?.querySelector('.stat-label');
     const statTicketsCardA = document.querySelector('#stat-tickets')?.closest('.stat-card')?.querySelector('.stat-label');
     const statAssignedCardA = document.querySelector('#stat-assigned')?.closest('.stat-card')?.querySelector('.stat-label');
@@ -1509,8 +1690,8 @@ function updateStats() {
 }
 
 function renderTable() {
-  const search = dom.searchInput.value.toLowerCase();
-  const pkgF = dom.filterPackage.value, conF = dom.filterConsultant.value, staF = dom.filterStatus.value;
+  const search = (dom.searchInput ? dom.searchInput.value : '').toLowerCase();
+  const pkgF = dom.filterPackage ? dom.filterPackage.value : 'all', conF = dom.filterConsultant ? dom.filterConsultant.value : 'all', staF = dom.filterStatus ? dom.filterStatus.value : 'all';
   const isTeamView = state.currentView !== 'admin';
   // Update section heading
   const sectionH2 = document.querySelector('#assignments-section h2');
@@ -1518,7 +1699,7 @@ function renderTable() {
     sectionH2.textContent = isTeamView ? `My Authors — ${state.currentView}` : 'Author Assignments & Workflow';
   }
   let rows = getViewAuthors();
-  if (search) rows = rows.filter(a => a.name.toLowerCase().includes(search) || a.email.toLowerCase().includes(search) || (a.consultant && a.consultant.toLowerCase().includes(search)));
+  if (search) rows = rows.filter(a => a.name.toLowerCase().includes(search) || (a.email || '').toLowerCase().includes(search) || (a.consultant && a.consultant.toLowerCase().includes(search)));
   if (pkgF !== 'all') rows = rows.filter(a => a.packageKey === pkgF);
   if (!isTeamView && conF !== 'all') rows = rows.filter(a => a.consultant === conF);
   if (staF !== 'all') rows = rows.filter(a => a.status === staF);
@@ -1535,12 +1716,12 @@ function renderTable() {
 
     dom.tbody.innerHTML = rows.map((a, idx) => {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
-      const authorTickets = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase());
+      const authorTickets = state.tickets.filter(t => t.requesterEmail === (a.email || '').toLowerCase());
       const tix = authorTickets.length;
       const hasOpenTicket = authorTickets.some(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6);
       const latestTicket = authorTickets.length > 0 ? authorTickets[0] : null;
 
-      // Ticket badge with status
+      // Ticket badge with status (clickable → scroll to FD Tickets section)
       let tBadge;
       if (tix > 0) {
         const openCount = authorTickets.filter(t => t.statusCode === 2).length;
@@ -1552,16 +1733,21 @@ function renderTable() {
         if (pendCount) parts.push(`<span class="badge fd-status-pending">${pendCount} Pending</span>`);
         if (waitCount) parts.push(`<span class="badge fd-status-waiting">${waitCount} Waiting</span>`);
         if (resCount) parts.push(`<span class="badge fd-status-resolved">${resCount} Resolved</span>`);
-        tBadge = parts.join(' ');
+        const badgeContent = parts.length > 0 ? parts.join(' ') : `<span class="badge badge-fd">${tix}</span>`;
+        tBadge = `<span class="fd-badge-link" onclick="scrollToTicketGroup('${esc((a.email || '').toLowerCase())}')" title="View all tickets">${badgeContent}</span>`;
       } else {
         tBadge = '<span class="muted">No tickets</span>';
       }
 
-      // Action (team view): only allow replying to open/pending Freshdesk tickets
+      // Action (team view): show links to all open tickets, not just one
       let actionBtn;
       if (latestTicket && hasOpenTicket) {
-        const openTicket = authorTickets.find(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6);
-        actionBtn = `<a href="https://${FD_DOMAIN}/a/tickets/${openTicket.id}" target="_blank" class="btn btn-sm btn-primary">Reply on FD</a>`;
+        const openTickets = authorTickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6);
+        if (openTickets.length === 1) {
+          actionBtn = `<a href="https://${FD_DOMAIN}/a/tickets/${openTickets[0].id}" target="_blank" class="btn btn-sm btn-primary">Reply on FD</a>`;
+        } else {
+          actionBtn = openTickets.map(ot => `<a href="https://${FD_DOMAIN}/a/tickets/${ot.id}" target="_blank" class="btn btn-xs btn-primary">#${ot.id}</a>`).join(' ');
+        }
       } else {
         actionBtn = `<span class="muted">No open FD ticket</span>`;
       }
@@ -1571,9 +1757,14 @@ function renderTable() {
         ${authorStatusOptionsHtml(a.status)}
       </select>`;
 
+      const reassignTag = a.reassignedFrom ? `<span class="badge badge-reassigned" title="Reassigned from ${esc(a.reassignedFrom)}">↳ ${esc(a.reassignedFrom)}</span>` : '';
+      const bubbleInfo = a.bubbleBooks && a.bubbleBooks.length > 0
+        ? ` <span class="badge badge-bubble" title="${a.bubbleBooks.map(b => `${b.title} (${b.status})`).join(', ')}">${a.bubbleBooks.length} book${a.bubbleBooks.length > 1 ? 's' : ''}</span>`
+        : '';
+
       return `<tr class="${hasOpenTicket ? 'row-needs-reply' : ''}">
         <td class="td-center muted">${idx + 1}</td>
-        <td class="td-name">${esc(a.name)}</td>
+        <td class="td-name">${esc(a.name)} ${reassignTag}${bubbleInfo}</td>
         <td class="td-email">${esc(a.email)}</td>
         <td><span class="badge ${pkgC}">${esc(a.package)}</span></td>
         <td>${formatDate(a.paymentDate)}</td>
@@ -1594,13 +1785,14 @@ function renderTable() {
     dom.tbody.innerHTML = rows.map(a => {
       const pkgC = a.packageKey === 'indian' ? 'badge-indian' : 'badge-intl';
       const conOpts = CONSULTANTS.map(c => `<option value="${c.name}" ${a.consultant === c.name ? 'selected' : ''}>${c.name}${c.active ? '' : ' (Resigned)'}</option>`).join('');
-      const tix = state.tickets.filter(t => t.requesterEmail === a.email.toLowerCase()).length;
-      const tBadge = tix > 0 ? `<span class="badge badge-fd">${tix}</span>` : '<span class="muted">—</span>';
+      const tix = state.tickets.filter(t => t.requesterEmail === (a.email || '').toLowerCase()).length;
+      const tBadge = tix > 0 ? `<span class="badge badge-fd fd-badge-link" onclick="scrollToTicketGroup('${esc((a.email || '').toLowerCase())}')" title="View tickets">${tix}</span>` : '<span class="muted">—</span>';
 
       const ck = (stage) => `<input type="checkbox" ${a[stage] ? 'checked' : ''} onchange="toggleStage('${a.id}','${stage}')" class="stage-cb">`;
 
+      const reassignTagAdmin = a.reassignedFrom ? ` <span class="badge badge-reassigned" title="Reassigned from ${esc(a.reassignedFrom)}">↳ ${esc(a.reassignedFrom)}</span>` : '';
       return `<tr>
-        <td class="td-name">${esc(a.name)}</td>
+        <td class="td-name">${esc(a.name)}${reassignTagAdmin}</td>
         <td class="td-email">${esc(a.email)}</td>
         <td><span class="badge ${pkgC}">${esc(a.package)}</span></td>
         <td>${formatDate(a.paymentDate)}</td>
@@ -1639,7 +1831,7 @@ function renderWorkload() {
     const done = assigned.filter(a => a.status === 'completed').length;
     const inProg = assigned.filter(a => a.status === 'in-progress').length;
     const pending = assigned.filter(a => a.status === 'assigned').length;
-    const emails = assigned.map(a => a.email.toLowerCase());
+    const emails = assigned.map(a => (a.email || '').toLowerCase());
     const myTickets = state.tickets.filter(t => emails.includes(t.requesterEmail));
     const openTix = myTickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6).length;
     const resolvedTix = myTickets.filter(t => t.statusCode === 4 || t.statusCode === 5).length;
@@ -1662,7 +1854,7 @@ function renderWorkload() {
       const intl = assigned.filter(a => a.packageKey === 'intl').length;
       const good = assigned.filter(a => a.status === 'good-to-go').length;
       const done = assigned.filter(a => a.status === 'completed').length;
-      const emails = assigned.map(a => a.email.toLowerCase());
+      const emails = assigned.map(a => (a.email || '').toLowerCase());
       const tix = state.tickets.filter(t => emails.includes(t.requesterEmail)).length;
       const trackerCount = getTrackerCountByConsultant(c.name);
       const tag = c.active ? (c.freshdeskAgentId ? '<span class="fd-connected">FD ✓</span>' : '<span class="fd-disconnected">FD ✗</span>') : '<span class="resigned-tag">Resigned</span>';
@@ -1693,13 +1885,13 @@ function renderTickets() {
     return;
   }
   if (dom.ticketsSection) dom.ticketsSection.classList.remove('hidden');
-  const search = (dom.ticketSearch.value || '').toLowerCase();
-  const mf = dom.ticketFilterMatch.value;
+  const search = ((dom.ticketSearch && dom.ticketSearch.value) || '').toLowerCase();
+  const mf = dom.ticketFilterMatch ? dom.ticketFilterMatch.value : 'all';
   const sf = dom.ticketFilterStatus ? dom.ticketFilterStatus.value : 'all';
   let rows = state.tickets;
   // In team view, only show tickets for this consultant's authors
   if (state.currentView !== 'admin') {
-    const viewEmails = getViewAuthors().map(a => a.email.toLowerCase());
+    const viewEmails = getViewAuthors().map(a => (a.email || '').toLowerCase());
     rows = rows.filter(t => viewEmails.includes(t.requesterEmail));
   }
   if (search) rows = rows.filter(t => t.subject.toLowerCase().includes(search) || t.requesterEmail.includes(search) || (t.matchedAuthor && t.matchedAuthor.toLowerCase().includes(search)));
@@ -1708,25 +1900,81 @@ function renderTickets() {
   if (mf === 'matched') rows = rows.filter(t => t.isMatched);
   if (mf === 'unmatched') rows = rows.filter(t => !t.isMatched);
   if (!rows.length) { dom.ticketsBody.innerHTML = '<tr class="empty-row"><td colspan="7">No tickets.</td></tr>'; return; }
-  dom.ticketsBody.innerHTML = rows.map(t => {
-    const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
-    const sc = `fd-status-${(t.status || '').toLowerCase().replace(/\s+/g, '-')}`;
-    const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
-    return `<tr>
-      <td><a href="https://${FD_DOMAIN}/a/tickets/${t.id}" target="_blank" class="ticket-link">#${t.id}</a></td>
-      <td class="td-subject">${esc(t.subject)}</td>
-      <td class="td-email">${esc(t.requesterEmail)}</td>
-      <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">—</span>'}</td>
-      <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">—</span>'}</td>
-      <td><span class="badge ${sc}">${t.status}</span></td>
-      <td>${act}</td>
-    </tr>`;
-  }).join('');
+
+  // Group tickets by requester email
+  const groups = {};
+  rows.forEach(t => {
+    const key = t.requesterEmail;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  // Sort groups: matched first, then by ticket count descending
+  const sortedEmails = Object.keys(groups).sort((a, b) => {
+    const aMatched = groups[a][0].isMatched ? 1 : 0;
+    const bMatched = groups[b][0].isMatched ? 1 : 0;
+    if (bMatched !== aMatched) return bMatched - aMatched;
+    return groups[b].length - groups[a].length;
+  });
+
+  let html = '';
+  sortedEmails.forEach(email => {
+    const tickets = groups[email];
+    const isMulti = tickets.length > 1;
+    const collapsed = !!state.collapsedTicketGroups[email];
+
+    if (isMulti) {
+      // Group header row
+      const firstTicket = tickets[0];
+      const authorName = firstTicket.matchedAuthor || email;
+      const consultant = firstTicket.matchedConsultant || '';
+      const openCount = tickets.filter(t => t.statusCode === 2 || t.statusCode === 3 || t.statusCode === 6).length;
+      const needsAssign = tickets.filter(t => t.needsReassign).length;
+      const assignBtn = needsAssign > 0 ? `<button class="btn btn-sm btn-accent" onclick="event.stopPropagation(); assignTicketsByEmail('${esc(email)}')">Assign All (${needsAssign})</button>` : '';
+      const chevron = collapsed ? '&#9654;' : '&#9660;';
+
+      html += `<tr class="ticket-group-header" data-ticket-group="${esc(email)}" onclick="toggleTicketGroup('${esc(email)}')" style="cursor:pointer">
+        <td colspan="3"><span class="group-chevron">${chevron}</span> <strong>${esc(authorName)}</strong> <span class="muted">(${tickets.length} tickets${openCount ? `, ${openCount} open` : ''})</span></td>
+        <td>${firstTicket.isMatched ? '<span class="td-matched">Matched</span>' : '<span class="td-unmatched">Unmatched</span>'}</td>
+        <td>${consultant ? esc(consultant) : '<span class="muted">—</span>'}</td>
+        <td></td>
+        <td>${assignBtn}</td>
+      </tr>`;
+
+      if (!collapsed) {
+        tickets.forEach(t => {
+          html += renderTicketRow(t, true);
+        });
+      }
+    } else {
+      html += renderTicketRow(tickets[0], false, email);
+    }
+  });
+
+  dom.ticketsBody.innerHTML = html;
+}
+
+function renderTicketRow(t, indented, groupEmail) {
+  const mc = t.isMatched ? 'td-matched' : 'td-unmatched';
+  const sc = `fd-status-${(t.status || '').toLowerCase().replace(/\s+/g, '-')}`;
+  const act = t.needsReassign ? `<button class="btn btn-sm btn-accent" onclick="assignSingleTicket(${t.id})">→ ${esc(t.matchedConsultant)}</button>` : (t.isMatched ? '<span class="muted">OK</span>' : '<span class="muted">—</span>');
+  const groupAttr = groupEmail ? ` data-ticket-group="${esc(groupEmail)}"` : '';
+  return `<tr class="${indented ? 'ticket-group-child' : ''}"${groupAttr}>
+    <td><a href="https://${FD_DOMAIN}/a/tickets/${t.id}" target="_blank" class="ticket-link">#${t.id}</a></td>
+    <td class="td-subject">${esc(t.subject)}</td>
+    <td class="td-email">${esc(t.requesterEmail)}</td>
+    <td class="${mc}">${t.matchedAuthor ? esc(t.matchedAuthor) : '<span class="muted">—</span>'}</td>
+    <td>${t.matchedConsultant ? esc(t.matchedConsultant) : '<span class="muted">—</span>'}</td>
+    <td><span class="badge ${sc}">${t.status}</span></td>
+    <td>${act}</td>
+  </tr>`;
 }
 
 function toggleButtons() {
   const h = state.authors.length > 0;
-  dom.btnAutoAssign.disabled = !h; dom.btnClear.disabled = !h; dom.btnExport.disabled = !h;
+  if (dom.btnAutoAssign) dom.btnAutoAssign.disabled = !h;
+  if (dom.btnClear) dom.btnClear.disabled = !h;
+  if (dom.btnExport) dom.btnExport.disabled = !h;
 }
 
 function showStatus(m, t) { dom.apiStatus.textContent = m; dom.apiStatus.className = `status-msg status-${t}`; dom.apiStatus.classList.remove('hidden'); clearTimeout(showStatus._t); showStatus._t = setTimeout(() => dom.apiStatus.classList.add('hidden'), 8000); }
@@ -1768,7 +2016,7 @@ function renderPerformance() {
     const workflowPct = totalStages > 0 ? Math.round((doneStages / totalStages) * 100) : 0;
 
     // Tickets resolved
-    const emails = assigned.map(a => a.email.toLowerCase());
+    const emails = assigned.map(a => (a.email || '').toLowerCase());
     const myTickets = state.tickets.filter(t => emails.includes(t.requesterEmail));
     const resolved = myTickets.filter(t => t.statusCode === 4 || t.statusCode === 5).length;
 
@@ -1874,7 +2122,7 @@ function closeCallbackModal() {
 function updateCbAuthorMatch() {
   if (!dom.cbAuthorMatch) return;
   const email = (dom.cbAuthorEmail.value || '').toLowerCase().trim();
-  const author = state.authors.find(a => a.email.toLowerCase() === email);
+  const author = state.authors.find(a => (a.email || '').toLowerCase() === email);
   if (author) {
     dom.cbAuthorMatch.textContent = `✓ ${author.name} — ${author.consultant}`;
     dom.cbAuthorMatch.style.color = '#16a34a';
@@ -1894,7 +2142,7 @@ function saveCallback() {
   if (!email) { alert('Enter an author email.'); return; }
   if (!datetime) { alert('Pick a date & time.'); return; }
 
-  const author = state.authors.find(a => a.email.toLowerCase() === email.toLowerCase());
+  const author = state.authors.find(a => (a.email || '').toLowerCase() === email.toLowerCase());
   const authorName = author ? author.name : email.split('@')[0];
   const consultant = author ? author.consultant : (state.currentView !== 'admin' ? state.currentView : '');
 
@@ -1932,6 +2180,98 @@ function updateCallbackStatus(cbId, newStatus) {
 function deleteCallback(cbId) {
   state.callbacks = state.callbacks.filter(c => c.id !== cbId);
   saveCallbacksToStorage();
+  refreshUI();
+}
+
+// ── Add Author Modal ──────────────────────────────────────────────────────────
+function openAddAuthorModal() {
+  const modal = dom.addAuthorModal;
+  if (!modal) return;
+
+  // Clear fields
+  if (dom.aaName) dom.aaName.value = '';
+  if (dom.aaEmail) dom.aaEmail.value = '';
+  if (dom.aaPhone) dom.aaPhone.value = '';
+  if (dom.aaPackage) dom.aaPackage.value = 'Indian Bestseller';
+  if (dom.aaRemarks) dom.aaRemarks.value = '';
+
+  // Set date to today
+  if (dom.aaDate) {
+    const today = new Date();
+    dom.aaDate.value = today.toISOString().slice(0, 10);
+  }
+
+  // Populate consultant dropdown
+  if (dom.aaConsultant) {
+    const isTeamView = state.currentView !== 'admin';
+    dom.aaConsultant.innerHTML = ACTIVE_CONSULTANTS.map(c =>
+      `<option value="${esc(c.name)}">${esc(c.name)}</option>`
+    ).join('');
+    if (isTeamView) {
+      dom.aaConsultant.value = state.currentView;
+      dom.aaConsultant.disabled = true;
+    } else {
+      dom.aaConsultant.disabled = false;
+    }
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeAddAuthorModal() {
+  if (dom.addAuthorModal) dom.addAuthorModal.classList.add('hidden');
+}
+
+function saveNewAuthor() {
+  const name = (dom.aaName ? dom.aaName.value : '').trim();
+  const email = (dom.aaEmail ? dom.aaEmail.value : '').trim().toLowerCase();
+  const phone = (dom.aaPhone ? dom.aaPhone.value : '').trim();
+  const pkg = dom.aaPackage ? dom.aaPackage.value : 'Indian Bestseller';
+  const consultant = dom.aaConsultant ? dom.aaConsultant.value : '';
+  const paymentDate = dom.aaDate ? dom.aaDate.value : '';
+  const remarks = (dom.aaRemarks ? dom.aaRemarks.value : '').trim();
+
+  // Validate required fields
+  if (!name) { alert('Name is required.'); return; }
+  if (!email) { alert('Email is required.'); return; }
+  if (!pkg) { alert('Package is required.'); return; }
+
+  // Check email uniqueness
+  const existing = state.authors.find(a => (a.email || '').toLowerCase() === email);
+  if (existing) {
+    alert(`An author with email "${email}" already exists (${existing.name}, assigned to ${existing.consultant}).`);
+    return;
+  }
+
+  const pkgKey = pkg === 'Indian Bestseller' ? 'indian' : 'intl';
+
+  const author = {
+    id: 'a-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    name,
+    email,
+    phone,
+    package: pkg,
+    packageKey: pkgKey,
+    paymentDate: paymentDate || new Date().toLocaleDateString('en-IN'),
+    consultant,
+    status: 'assigned',
+    remarks,
+    introEmail: false,
+    authorResponse: false,
+    followUp: false,
+    markedYes: false,
+    filesGenerated: false,
+    addressMarketing: false,
+    primePlacement: false,
+    confirmationEmail: false,
+  };
+
+  state.authors.push(author);
+  queueAuthorOverridePersist(author);
+  if (state.currentView === 'admin') {
+    queueAuthorsRuntimeSnapshotPersist();
+  }
+  closeAddAuthorModal();
   refreshUI();
 }
 
@@ -2004,17 +2344,18 @@ function renderCallbacks() {
     const statusLabel = cb.status === 'upcoming' ? 'Upcoming' : cb.status === 'completed' ? 'Completed' : cb.status === 'missed' ? 'Missed' : cb.status;
     const calLink = generateCalendarLink(cb);
 
+    const cbIdEsc = esc(cb.id);
     let actions = '';
     if (cb.status === 'upcoming') {
       actions = `
-        <button class="btn btn-sm btn-primary" onclick="updateCallbackStatus('${cb.id}','completed')">✓ Done</button>
+        <button class="btn btn-sm btn-primary" onclick="updateCallbackStatus('${cbIdEsc}','completed')">✓ Done</button>
         <a href="${calLink}" target="_blank" class="btn-cal-link">📅 Calendar</a>
-        <button class="btn btn-sm btn-secondary" onclick="openCallbackModal('${cb.id}')" style="font-size:0.75rem;">Edit</button>
+        <button class="btn btn-sm btn-secondary" onclick="openCallbackModal('${cbIdEsc}')" style="font-size:0.75rem;">Edit</button>
       `;
     } else if (cb.status === 'missed') {
       actions = `
-        <button class="btn btn-sm btn-accent" onclick="openCallbackModal('${cb.id}')">Reschedule</button>
-        <button class="btn btn-sm btn-secondary" onclick="updateCallbackStatus('${cb.id}','completed')">Mark Done</button>
+        <button class="btn btn-sm btn-accent" onclick="openCallbackModal('${cbIdEsc}')">Reschedule</button>
+        <button class="btn btn-sm btn-secondary" onclick="updateCallbackStatus('${cbIdEsc}','completed')">Mark Done</button>
       `;
     } else {
       actions = `<span class="muted">—</span>`;
@@ -2050,12 +2391,12 @@ function updateFdLastUpdated() {
 function startFdAutoRefresh() {
   stopFdAutoRefresh();
   const usingServerCache = canUseServerCacheAutoRefresh();
-  const minutes = usingServerCache ? 1 : (parseInt(dom.fdRefreshInterval.value) || 5);
+  const minutes = usingServerCache ? 1 : (parseInt(dom.fdRefreshInterval && dom.fdRefreshInterval.value) || 5);
   const ms = minutes * 60 * 1000;
   state.fdAutoRefreshTimer = setInterval(() => {
     if (!hasFreshdeskAuthAvailable() && !canUseServerCacheAutoRefresh()) {
       stopFdAutoRefresh();
-      dom.fdAutoRefresh.checked = false;
+      if (dom.fdAutoRefresh) dom.fdAutoRefresh.checked = false;
       persistFreshdeskPrefs();
       return;
     }
@@ -2139,7 +2480,7 @@ if (dom.fdAutoRefresh) {
     if (dom.fdAutoRefresh.checked) {
       if (!hasFreshdeskAuthAvailable() && !canUseServerCacheAutoRefresh()) {
         showFdStatus('Enter API key first (or configure server Freshdesk key), then enable auto-refresh.', 'error');
-        dom.fdAutoRefresh.checked = false;
+        if (dom.fdAutoRefresh) dom.fdAutoRefresh.checked = false;
         return;
       }
       // Request notification permission
@@ -2178,6 +2519,10 @@ if (dom.btnCbCancel) dom.btnCbCancel.addEventListener('click', closeCallbackModa
 if (dom.cbAuthorEmail) dom.cbAuthorEmail.addEventListener('input', updateCbAuthorMatch);
 if (dom.callbackFilter) dom.callbackFilter.addEventListener('change', renderCallbacks);
 if (dom.callbackSearch) dom.callbackSearch.addEventListener('input', renderCallbacks);
+// Add Author
+if (dom.btnAddAuthor) dom.btnAddAuthor.addEventListener('click', () => openAddAuthorModal());
+if (dom.btnAaSave) dom.btnAaSave.addEventListener('click', saveNewAuthor);
+if (dom.btnAaCancel) dom.btnAaCancel.addEventListener('click', closeAddAuthorModal);
 dom.identitySelect.addEventListener('change', async e => {
   const view = e.target.value;
   const prevView = state.currentView;
@@ -2483,6 +2828,7 @@ function loadPreBuiltAuthors(authorsData, opts = {}) {
     if (rule && rule.targets && rule.targets.length && todayStr >= rule.after) {
       const fromName = a.consultant;
       if (!resignedCounters[fromName]) resignedCounters[fromName] = 0;
+      a.reassignedFrom = fromName; // track original consultant for UI badge
       a.consultant = rule.targets[resignedCounters[fromName] % rule.targets.length];
       resignedCounters[fromName]++;
       resignedReassigned++;

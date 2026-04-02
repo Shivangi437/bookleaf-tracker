@@ -406,6 +406,8 @@ tbody tr:hover { background: rgba(232,100,120,0.03); }
 .badge-indian { background: #fbe4ea; color: var(--indian); }
 .badge-intl { background: #efeaed; color: var(--intl); }
 .badge-fd { background: #fde7ec; color: var(--fd); }
+.badge-reassigned { background: #fef3c7; color: #92400e; font-size: 0.7rem; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
+.badge-bubble { background: #dbeafe; color: #1e40af; font-size: 0.7rem; padding: 1px 6px; margin-left: 4px; vertical-align: middle; cursor: help; }
 
 /* Freshdesk ticket status badges */
 .fd-status-open { background: #fee2e2; color: var(--danger); }
@@ -845,3 +847,17 @@ footer {
   .tracker-upload-row { flex-wrap: wrap; }
   .tracker-sheet-input { min-width: 0; width: 100%; }
 }
+
+/* ── Ticket grouping ────────────────────────────────────────────────────────── */
+.ticket-group-header { background: var(--surface-soft); }
+.ticket-group-header:hover { background: var(--primary-soft); }
+.ticket-group-header td { border-bottom: 1px solid var(--border); font-size: .92em; }
+.group-chevron { display: inline-block; width: 1em; font-size: .8em; color: var(--text-muted); }
+.ticket-group-child td:first-child { padding-left: 2rem; }
+.fd-badge-link { cursor: pointer; }
+.fd-badge-link:hover { opacity: .8; }
+.fd-badge-link > .badge { border-bottom: 1px dashed currentColor; }
+.badge.fd-badge-link { border-bottom: 1px dashed currentColor; }
+.btn-xs { padding: 2px 6px; font-size: .75rem; }
+@keyframes highlightFade { 0% { background: #fef08a; } 100% { background: transparent; } }
+.highlight-row { animation: highlightFade 2.5s ease-out; }

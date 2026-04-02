@@ -28,9 +28,7 @@
             <option value="admin">All Authors (Admin)</option>
             <option value="Vandana">Vandana Pradhan</option>
             <option value="Sapna">Sapna Kumari</option>
-            <option value="Tannu">Tannu Tiwari (Resigned)</option>
             <option value="Roosha">Roosha</option>
-            <option value="Firdaus">Firdaus (Resigned)</option>
           </select>
           <span id="identity-badge" class="identity-badge identity-admin">Admin View</span>
         </div>
@@ -123,9 +121,52 @@
       </div>
     </div>
 
+    <!-- Add Author Modal -->
+    <div id="add-author-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <h3>Add Author</h3>
+        <div class="field">
+          <label>Name *</label>
+          <input type="text" id="aa-name" placeholder="Author full name" class="search-input" style="width:100%;">
+        </div>
+        <div class="field">
+          <label>Email *</label>
+          <input type="email" id="aa-email" placeholder="author@example.com" class="search-input" style="width:100%;">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="text" id="aa-phone" placeholder="+91 98765 43210" class="search-input" style="width:100%;">
+        </div>
+        <div class="field">
+          <label>Package *</label>
+          <select id="aa-package" class="filter-select" style="width:100%;">
+            <option value="Indian Bestseller">Indian Bestseller</option>
+            <option value="Intl Bestseller">Intl Bestseller</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Consultant</label>
+          <select id="aa-consultant" class="filter-select" style="width:100%;"></select>
+        </div>
+        <div class="field">
+          <label>Payment Date</label>
+          <input type="date" id="aa-date" class="date-input" style="width:100%;">
+        </div>
+        <div class="field">
+          <label>Remarks</label>
+          <textarea id="aa-remarks" rows="2" placeholder="Optional remarks..." class="cb-notes-input"></textarea>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button id="btn-aa-save" class="btn btn-primary">Save Author</button>
+          <button id="btn-aa-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Author Assignments Table -->
     <section id="assignments-section" class="card">
-      <h2>Author Assignments &amp; Workflow</h2>
+      <h2 style="display:inline;">Author Assignments &amp; Workflow</h2>
+      <button id="btn-add-author" class="btn btn-primary btn-sm" style="margin-left:12px;vertical-align:middle;">+ Add Author</button>
       <div class="table-controls">
         <input type="text" id="search-input" placeholder="Search author, email, consultant..." class="search-input">
         <select id="filter-package" class="filter-select">
@@ -136,10 +177,8 @@
         <select id="filter-consultant" class="filter-select">
           <option value="all">All Consultants</option>
           <option value="Vandana">Vandana</option>
-          <option value="Sapna">Sapna</option>
-          <option value="Tannu">Tannu (Resigned)</option>
+          <option value="Sapna">Sapna (+ Tannu/Firdaus)</option>
           <option value="Roosha">Roosha</option>
-          <option value="Firdaus">Firdaus (Resigned)</option>
         </select>
         <select id="filter-status" class="filter-select">
           <option value="all">All Statuses</option>
@@ -240,9 +279,7 @@
                   <select id="tracker-consultant" class="filter-select">
                     <option value="Vandana">Vandana</option>
                     <option value="Sapna">Sapna</option>
-                    <option value="Tannu">Tannu (Resigned)</option>
                     <option value="Roosha">Roosha</option>
-                    <option value="Firdaus">Firdaus</option>
                   </select>
                   <input type="file" id="tracker-csv" accept=".csv" class="tracker-file-input">
                   <button id="btn-load-tracker" class="btn btn-secondary btn-sm">Load Tracker</button>
@@ -260,6 +297,17 @@
               <div id="api-status" class="status-msg hidden"></div>
             </div>
           </details>
+        </section>
+
+        <section id="bubble-panel" class="card">
+          <h2>Bubble Dashboard Sync</h2>
+          <div class="config-form">
+            <p class="info-text" style="margin-bottom:10px;">Sync book data from <strong>dashboard.bookleafpub.in</strong>. Matches books to authors by name and enriches the tracker with book status, links, and publishing info.</p>
+            <div class="btn-row">
+              <button id="btn-bubble-sync" class="btn btn-primary" onclick="syncFromBubble()">Sync Books from Bubble</button>
+            </div>
+            <div id="bubble-status" class="status-msg hidden"></div>
+          </div>
         </section>
 
         <section id="freshdesk-panel" class="card">
