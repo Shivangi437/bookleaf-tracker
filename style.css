@@ -408,6 +408,7 @@ tbody tr:hover { background: rgba(232,100,120,0.03); }
 .badge-fd { background: #fde7ec; color: var(--fd); }
 .badge-reassigned { background: #fef3c7; color: #92400e; font-size: 0.7rem; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
 .badge-bubble { background: #dbeafe; color: #1e40af; font-size: 0.7rem; padding: 1px 6px; margin-left: 4px; vertical-align: middle; cursor: help; }
+.badge-merged { background: #ede9fe; color: #6d28d9; font-size: 0.65rem; padding: 1px 5px; margin-left: 4px; vertical-align: middle; }
 
 /* Freshdesk ticket status badges */
 .fd-status-open { background: #fee2e2; color: var(--danger); }
