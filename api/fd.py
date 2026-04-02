@@ -45,13 +45,25 @@ class handler(BaseHTTPRequestHandler):
 
     def _proxy(self, method):
         # Strip /api/fd prefix to get the Freshdesk path
-        path = self.path
+        path = self.path.split('?')[0]  # remove query string for matching
         if path.startswith('/api/fd/'):
             path = path[len('/api/fd/'):]
         elif path.startswith('/api/fd'):
             path = path[len('/api/fd'):]
 
-        fd_url = f"https://{FD_DOMAIN}/api/v2/{path}"
+        # Handle config endpoint locally (don't proxy to Freshdesk)
+        if path.rstrip('/') == 'config':
+            self._send_json(200, {
+                'configured': bool(_server_freshdesk_key()),
+                'domain': FD_DOMAIN,
+            })
+            return
+
+        # Re-attach query string for proxy
+        qs = ''
+        if '?' in self.path:
+            qs = self.path[self.path.index('?'):]
+        fd_url = f"https://{FD_DOMAIN}/api/v2/{path}{qs}"
 
         auth = self.headers.get('Authorization', '')
         if not auth:

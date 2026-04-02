@@ -14,7 +14,7 @@ try:
         FD_STATUS,
     )
 except ImportError:
-    from fd_sync_lib import (  # type: ignore
+    from _fd_sync_lib import (  # type: ignore
         kv_available,
         load_fd_cache,
         save_fd_cache,
@@ -135,7 +135,11 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Read the POST body.
-        content_length = int(self.headers.get("Content-Length", 0))
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+        except (ValueError, TypeError):
+            self._send_json(400, {"error": "Invalid Content-Length header"})
+            return
         if content_length == 0:
             self._send_json(400, {"error": "Empty request body"})
             return

@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 try:
     from api.fd_sync_lib import (VALID_VIEWS, get_admin_password, kv_available, load_fd_cache)
 except ImportError:
-    from fd_sync_lib import (  # type: ignore
+    from _fd_sync_lib import (  # type: ignore
         VALID_VIEWS,
         get_admin_password,
         kv_available,

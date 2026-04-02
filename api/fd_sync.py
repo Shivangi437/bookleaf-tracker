@@ -18,7 +18,7 @@ try:
         save_fd_cache,
     )
 except ImportError:
-    from fd_sync_lib import (  # type: ignore
+    from _fd_sync_lib import (  # type: ignore
         FreshdeskHttpError,
         cache_store_kind,
         build_cache_payload,

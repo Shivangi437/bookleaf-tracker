@@ -20,7 +20,7 @@ try:
         set_doc,
     )
 except ImportError:
-    from db_store import (  # type: ignore
+    from _db_store import (  # type: ignore
         DOC_AUTHOR_OVERRIDES,
         DOC_AUTHORS_RUNTIME,
         DOC_CALLBACKS,

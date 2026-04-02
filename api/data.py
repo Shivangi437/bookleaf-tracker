@@ -15,7 +15,7 @@ try:
     from api.db_store import db_available as _db_available, get_all_runtime_state
 except ImportError:
     try:
-        from db_store import db_available as _db_available, get_all_runtime_state  # type: ignore
+        from _db_store import db_available as _db_available, get_all_runtime_state  # type: ignore
     except ImportError:
         _db_available = lambda: False  # type: ignore
         get_all_runtime_state = None  # type: ignore
